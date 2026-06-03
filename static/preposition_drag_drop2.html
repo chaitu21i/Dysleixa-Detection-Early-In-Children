@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preposition Matching Game</title>
+    <style>
+        body {
+            background: #f7ca88; /* Warm wood-like background */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .game-board {
+            width: 100%;
+            max-width: none;
+            background: #e9b97b;
+            padding: 20px 40px;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            box-sizing: border-box;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drop-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: nowrap;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .image-box {
+            width: 100%;
+            height: 160px;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .image-box img {
+            width: 90%;
+            height: auto;
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 3px dashed #9d6b41;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .drop-zone.hovered {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .card-pile {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #9d6b41;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            width: 140px;
+            height: 60px;
+            background: white;
+            color: #3b2075;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            cursor: grab;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+            user-select: none;
+        }
+
+        .card:active { cursor: grabbing; }
+        .card.dragging { opacity: 0.4; }
+        .card.selected { outline: 3px solid #6d6bff; box-shadow: 0 8px 18px rgba(109,107,255,0.12); }
+    </style>
+</head>
+<body>
+
+<div class="game-board">
+    <!-- Level header with indicator and navigation -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:20px;font-weight:800;color:#3b2075;">Prepositions</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button id="prev-level" style="padding:8px 12px;border-radius:8px;border:none;background:#d6a86a;cursor:pointer;">Prev</button>
+            <div id="level-indicator" style="min-width:90px;text-align:center;font-weight:700;color:#3b2075;">Level 1</div>
+            <button id="next-level" style="padding:8px 12px;border-radius:8px;border:none;background:#d6a86a;cursor:pointer;">Next</button>
+        </div>
+    </div>
+    <!-- Top Row: Images and Drop Targets -->
+    <div id="drop-container" class="drop-container">
+        <div class="column">
+            <div class="image-box">
+                <svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <!-- desk -->
+                    <rect x="40" y="50" width="60" height="25" fill="#8b4513"/>
+                    <rect x="45" y="30" width="8" height="20" fill="#8b4513"/>
+                    <rect x="87" y="30" width="8" height="20" fill="#8b4513"/>
+                    <!-- boy under desk -->
+                    <circle cx="70" cy="95" r="10" fill="#ffcc99"/>
+                    <path d="M62,90 Q70,85 78,90" fill="#000"/>
+                    <circle cx="67" cy="93" r="1.5" fill="#000"/>
+                    <circle cx="73" cy="93" r="1.5" fill="#000"/>
+                    <rect x="63" y="105" width="14" height="12" fill="#4682b4"/>
+                    <rect x="63" y="117" width="4" height="7" fill="#333"/>
+                    <rect x="73" y="117" width="4" height="7" fill="#333"/>
+                </svg>
+            </div>
+            <div class="drop-zone" data-target="under"></div>
+        </div>
+        <div class="column">
+            <div class="image-box">
+                <svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <!-- desk with drawer -->
+                    <rect x="40" y="40" width="60" height="25" fill="#8b4513"/>
+                    <rect x="45" y="20" width="8" height="20" fill="#8b4513"/>
+                    <rect x="87" y="20" width="8" height="20" fill="#8b4513"/>
+                    <!-- drawer opening -->
+                    <rect x="50" y="55" width="40" height="12" fill="#deb887"/>
+                    <!-- boy inside/in drawer -->
+                    <circle cx="70" cy="68" r="9" fill="#ffcc99"/>
+                    <path d="M63,64 Q70,60 77,64" fill="#000"/>
+                    <circle cx="66" cy="66" r="1.5" fill="#000"/>
+                    <circle cx="74" cy="66" r="1.5" fill="#000"/>
+                    <rect x="64" y="77" width="12" height="8" fill="#4682b4"/>
+                </svg>
+            </div>
+            <div class="drop-zone" data-target="in"></div>
+        </div>
+        <div class="column">
+            <div class="image-box">
+                <svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <!-- desk -->
+                    <rect x="50" y="50" width="50" height="20" fill="#8b4513"/>
+                    <rect x="54" y="32" width="7" height="18" fill="#8b4513"/>
+                    <rect x="89" y="32" width="7" height="18" fill="#8b4513"/>
+                    <!-- boy standing by desk -->
+                    <circle cx="25" cy="45" r="10" fill="#ffcc99"/>
+                    <path d="M17,40 Q25,35 33,40" fill="#000"/>
+                    <circle cx="22" cy="43" r="1.5" fill="#000"/>
+                    <circle cx="28" cy="43" r="1.5" fill="#000"/>
+                    <rect x="18" y="55" width="14" height="13" fill="#4682b4"/>
+                    <rect x="18" y="68" width="3.5" height="8" fill="#333"/>
+                    <rect x="28.5" y="68" width="3.5" height="8" fill="#333"/>
+                </svg>
+            </div>
+            <div class="drop-zone" data-target="by"></div>
+        </div>
+        <div class="column">
+            <div class="image-box">
+                <svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <!-- desk -->
+                    <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                    <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                    <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                    <!-- boy sitting on desk -->
+                    <circle cx="70" cy="38" r="11" fill="#ffcc99"/>
+                    <path d="M61,33 Q70,27 79,33" fill="#000"/>
+                    <circle cx="66" cy="36" r="1.5" fill="#000"/>
+                    <circle cx="74" cy="36" r="1.5" fill="#000"/>
+                    <rect x="62" y="49" width="16" height="12" fill="#4682b4"/>
+                    <rect x="62" y="61" width="4" height="8" fill="#333"/>
+                    <rect x="74" y="61" width="4" height="8" fill="#333"/>
+                </svg>
+            </div>
+            <div class="drop-zone" data-target="on"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Draggable Cards -->
+    <div class="card-pile" id="card-pile">
+        <div class="card" draggable="true" id="by">by</div>
+        <div class="card" draggable="true" id="in">in</div>
+        <div class="card" draggable="true" id="under">under</div>
+        <div class="card" draggable="true" id="on">on</div>
+    </div>
+</div>
+
+<script>
+    // level definitions: three distinct orderings of the four prepositions
+    const levels = [
+        { order: ['under','in','by','on'] },
+        { order: ['push','pull','away','toward'] },
+        { order: ['on','in','under','by'] }
+    ];
+    let currentLevel = 0;
+
+    // svg snippets for each word
+    const svgMap = {
+        under: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="40" y="50" width="60" height="25" fill="#8b4513"/>
+                    <rect x="45" y="30" width="8" height="20" fill="#8b4513"/>
+                    <rect x="87" y="30" width="8" height="20" fill="#8b4513"/>
+                    <circle cx="70" cy="95" r="10" fill="#ffcc99"/>
+                    <path d="M62,90 Q70,85 78,90" fill="#000"/>
+                    <circle cx="67" cy="93" r="1.5" fill="#000"/>
+                    <circle cx="73" cy="93" r="1.5" fill="#000"/>
+                    <rect x="63" y="105" width="14" height="12" fill="#4682b4"/>
+                    <rect x="63" y="117" width="4" height="7" fill="#333"/>
+                    <rect x="73" y="117" width="4" height="7" fill="#333"/>
+                </svg>`,
+        in: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="40" y="40" width="60" height="25" fill="#8b4513"/>
+                    <rect x="45" y="20" width="8" height="20" fill="#8b4513"/>
+                    <rect x="87" y="20" width="8" height="20" fill="#8b4513"/>
+                    <rect x="50" y="55" width="40" height="12" fill="#deb887"/>
+                    <circle cx="70" cy="68" r="9" fill="#ffcc99"/>
+                    <path d="M63,64 Q70,60 77,64" fill="#000"/>
+                    <circle cx="66" cy="66" r="1.5" fill="#000"/>
+                    <circle cx="74" cy="66" r="1.5" fill="#000"/>
+                    <rect x="64" y="77" width="12" height="8" fill="#4682b4"/>
+                </svg>`,
+        by: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="50" y="50" width="50" height="20" fill="#8b4513"/>
+                    <rect x="54" y="32" width="7" height="18" fill="#8b4513"/>
+                    <rect x="89" y="32" width="7" height="18" fill="#8b4513"/>
+                    <circle cx="25" cy="45" r="10" fill="#ffcc99"/>
+                    <path d="M17,40 Q25,35 33,40" fill="#000"/>
+                    <circle cx="22" cy="43" r="1.5" fill="#000"/>
+                    <circle cx="28" cy="43" r="1.5" fill="#000"/>
+                    <rect x="18" y="55" width="14" height="13" fill="#4682b4"/>
+                    <rect x="18" y="68" width="3.5" height="8" fill="#333"/>
+                    <rect x="28.5" y="68" width="3.5" height="8" fill="#333"/>
+                </svg>`,
+        on: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                    <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                    <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                    <circle cx="70" cy="38" r="11" fill="#ffcc99"/>
+                    <path d="M61,33 Q70,27 79,33" fill="#000"/>
+                    <circle cx="66" cy="36" r="1.5" fill="#000"/>
+                    <circle cx="74" cy="36" r="1.5" fill="#000"/>
+                    <rect x="62" y="49" width="16" height="12" fill="#4682b4"/>
+                    <rect x="62" y="61" width="4" height="8" fill="#333"/>
+                    <rect x="74" y="61" width="4" height="8" fill="#333"/>
+                </svg>`
+                ,
+                // Level 2 action images (cartoon cats)
+                push: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- desk from level1 style -->
+                                        <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                                        <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <!-- boy pushing arrow indicator -->
+                                        <circle cx="70" cy="38" r="11" fill="#ffcc99"/>
+                                        <path d="M61,33 Q70,27 79,33" fill="#000"/>
+                                        <circle cx="66" cy="36" r="1.5" fill="#000"/>
+                                        <circle cx="74" cy="36" r="1.5" fill="#000"/>
+                                        <rect x="62" y="49" width="16" height="12" fill="#4682b4"/>
+                                        <rect x="62" y="61" width="4" height="8" fill="#333"/>
+                                        <rect x="74" y="61" width="4" height="8" fill="#333"/>
+                                        <!-- push arrow -->
+                                        <polygon points="50,56 58,52 50,48" fill="#ff6b6b" />
+                                </svg>`,
+                pull: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- desk style -->
+                                        <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                                        <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <!-- boy pulling -->
+                                        <circle cx="70" cy="38" r="11" fill="#ffcc99"/>
+                                        <path d="M61,33 Q70,27 79,33" fill="#000"/>
+                                        <circle cx="66" cy="36" r="1.5" fill="#000"/>
+                                        <circle cx="74" cy="36" r="1.5" fill="#000"/>
+                                        <rect x="62" y="49" width="16" height="12" fill="#4682b4"/>
+                                        <rect x="62" y="61" width="4" height="8" fill="#333"/>
+                                        <rect x="74" y="61" width="4" height="8" fill="#333"/>
+                                        <!-- pull arrow -->
+                                        <polygon points="90,56 82,52 90,48" fill="#ff6b6b" />
+                                </svg>`,
+                away: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- desk style -->
+                                        <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                                        <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <!-- boy walking away from desk -->
+                                        <g transform="translate(40,36)">
+                                            <circle cx="0" cy="42" r="12" fill="#ffcc99" />
+                                            <circle cx="-4" cy="40" r="1.2" fill="#000" />
+                                            <circle cx="4" cy="40" r="1.2" fill="#000" />
+                                            <path d="M-6,46 Q0,42 6,46" fill="#000" />
+                                        </g>
+                                </svg>`,
+                toward: `<svg width="180" height="180" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- desk style -->
+                                        <rect x="35" y="55" width="70" height="22" fill="#8b4513"/>
+                                        <rect x="40" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <rect x="92" y="32" width="8" height="23" fill="#8b4513"/>
+                                        <!-- boy moving toward desk -->
+                                        <g transform="translate(90,36)">
+                                            <circle cx="0" cy="42" r="12" fill="#ffcc99" />
+                                            <circle cx="-4" cy="40" r="1.2" fill="#000" />
+                                            <circle cx="4" cy="40" r="1.2" fill="#000" />
+                                            <path d="M-6,46 Q0,42 6,46" fill="#000" />
+                                        </g>
+                                        <!-- arrow toward desk -->
+                                        <path d="M30,98 L70,66" stroke="#ff6b6b" stroke-width="6" stroke-linecap="round" />
+                                </svg>`
+    };
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadLevel() {
+        const conf = levels[currentLevel];
+        document.getElementById('level-indicator').textContent = `Level ${currentLevel+1}`;
+
+        const dropContainer = document.getElementById('drop-container');
+        dropContainer.innerHTML = '';
+        conf.order.forEach(word => {
+            const col = document.createElement('div');
+            col.className = 'column';
+            const imgBox = document.createElement('div');
+            imgBox.className = 'image-box';
+            imgBox.innerHTML = svgMap[word];
+            const zone = document.createElement('div');
+            zone.className = 'drop-zone';
+            zone.setAttribute('data-target', word);
+            col.appendChild(imgBox);
+            col.appendChild(zone);
+            dropContainer.appendChild(col);
+        });
+
+        const cards = document.getElementById('card-pile');
+        cards.innerHTML = '';
+        shuffle(conf.order).forEach(word => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = word;
+            card.draggable = true;
+            card.textContent = word;
+            cards.appendChild(card);
+        });
+
+        attachDragHandlers();
+    }
+
+    function attachDragHandlers() {
+        const cards = document.querySelectorAll('.card');
+        const zones = document.querySelectorAll('.drop-zone');
+        let selectedCardId = null; // fallback for touch/click
+
+        cards.forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+                setTimeout(() => e.target.classList.add('dragging'), 0);
+            });
+
+            card.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+            });
+
+            // Click / tap fallback: select card
+            card.addEventListener('click', (e) => {
+                // toggle selection
+                const id = e.currentTarget.id;
+                if (selectedCardId === id) {
+                    // deselect
+                    selectedCardId = null;
+                    e.currentTarget.classList.remove('selected');
+                } else {
+                    // clear other selections
+                    document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+                    selectedCardId = id;
+                    e.currentTarget.classList.add('selected');
+                }
+            });
+        });
+
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('hovered');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('hovered');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('hovered');
+                
+                const cardId = e.dataTransfer.getData('text/plain');
+                const targetWord = zone.getAttribute('data-target');
+
+                if (cardId === targetWord) {
+                    const droppedCard = document.getElementById(cardId);
+                    zone.appendChild(droppedCard);
+                    zone.style.border = "none";
+                    droppedCard.setAttribute('draggable', 'false');
+                    droppedCard.style.cursor = "default";
+                    // clear any selection state
+                    droppedCard.classList.remove('selected');
+                    selectedCardId = null;
+                    checkWin();
+                }
+            });
+
+            // Click / tap fallback on zone: if a card is selected, try to drop it here
+            zone.addEventListener('click', (e) => {
+                const targetWord = zone.getAttribute('data-target');
+                if (!selectedCardId) return;
+                if (selectedCardId === targetWord) {
+                    const droppedCard = document.getElementById(selectedCardId);
+                    zone.appendChild(droppedCard);
+                    zone.style.border = "none";
+                    droppedCard.setAttribute('draggable', 'false');
+                    droppedCard.style.cursor = "default";
+                    droppedCard.classList.remove('selected');
+                    selectedCardId = null;
+                    checkWin();
+                }
+            });
+        });
+    }
+
+    function checkWin() {
+        const remaining = document.getElementById('card-pile').children.length;
+        if (remaining === 0) {
+            if (currentLevel < levels.length - 1) {
+                currentLevel++;
+                setTimeout(() => {
+                    alert(`Great job! Level ${currentLevel} complete.`);
+                    loadLevel();
+                }, 300);
+            } else {
+                setTimeout(() => alert("Fantastic! You finished all levels!"), 300);
+            }
+        }
+    }
+
+    // Utility: read numeric query param
+    function getNumericParam(name) {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has(name)) return null;
+            const v = parseInt(params.get(name), 10);
+            return Number.isFinite(v) ? v : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Level navigation helpers
+    function goToLevel(n) {
+        if (n < 0) n = 0;
+        if (n > levels.length - 1) n = levels.length - 1;
+        currentLevel = n;
+        loadLevel();
+    }
+
+    document.getElementById('prev-level').addEventListener('click', () => {
+        goToLevel(currentLevel - 1);
+    });
+    document.getElementById('next-level').addEventListener('click', () => {
+        goToLevel(currentLevel + 1);
+    });
+
+    // If a start level is provided via query param `level` (1-based), honor it
+    const startLevelParam = getNumericParam('level');
+    if (startLevelParam !== null) {
+        // convert to 0-based index and clamp
+        const idx = Math.max(0, Math.min(levels.length - 1, startLevelParam - 1));
+        currentLevel = idx;
+    }
+
+    // initialize first level
+    loadLevel();
+</script>
+
+</body>
+</html>

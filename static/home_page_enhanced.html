@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Dyslexia Games - Fun Dyslexia Screening Hub</title>
+    
+    <!-- Google Fonts - Dyslexia Friendly -->
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Fredoka+One&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ==================== COLOR PALETTE ==================== */
+        :root {
+            --sky-blue: #AEE6FF;
+            --soft-yellow: #FFF4A3;
+            --mint-green: #B8F2E6;
+            --light-pink: #FFD6E0;
+            --lavender: #E4C1F9;
+            --dark-purple: #4a3f73;
+            --success-green: #7FE98A;
+            --error-red: #FF6B6B;
+            --text-dark: #2c2c2c;
+            --text-light: #ffffff;
+        }
+
+        /* ==================== TYPOGRAPHY ==================== */
+        html, body {
+            font-family: 'Comic Neue', cursive, sans-serif;
+            background: linear-gradient(135deg, var(--sky-blue) 0%, var(--mint-green) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fredoka One', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        body {
+            font-size: 18px;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==================== NAVBAR ==================== */
+        .navbar {
+            background: linear-gradient(90deg, var(--lavender), var(--light-pink));
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-text h1 {
+            font-size: 28px;
+            color: var(--dark-purple);
+            margin: 0;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--dark-purple);
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-link {
+            background: var(--text-light);
+            color: var(--dark-purple);
+            padding: 12px 24px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border: none;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background: var(--soft-yellow);
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(127, 233, 138, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(127, 233, 138, 0); }
+        }
+
+        /* ==================== MAIN CONTAINER ==================== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ==================== WELCOME SECTION ==================== */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideIn 0.6s ease;
+        }
+
+        .welcome-illustration {
+            font-size: 100px;
+            margin: 20px 0;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .welcome-text h2 {
+            font-size: 48px;
+            color: var(--dark-purple);
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-text p {
+            font-size: 22px;
+            color: var(--text-dark);
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+
+        .welcome-subtext {
+            font-size: 16px;
+            color: var(--dark-purple);
+            opacity: 0.8;
+            margin-top: 15px;
+        }
+
+        /* ==================== PROGRESS CARD ==================== */
+        .progress-card {
+            background: var(--text-white);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 3px solid var(--soft-yellow);
+            animation: slideIn 0.6s ease 0.1s both;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .progress-header h3 {
+            font-size: 28px;
+            color: var(--dark-purple);
+        }
+
+        .progress-stat {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--lavender);
+            background: var(--light-pink);
+            padding: 15px 25px;
+            border-radius: 20px;
+        }
+
+        .progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 15px;
+            height: 30px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 2px solid var(--mint-green);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-green), var(--mint-green));
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: var(--text-white);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .progress-info {
+            font-size: 16px;
+            color: var(--text-dark);
+            opacity: 0.8;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* ==================== GAMES SECTION ==================== */
+        .games-section {
+            margin: 60px 0;
+        }
+
+        .section-title {
+            font-size: 42px;
+            text-align: center;
+            color: var(--dark-purple);
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .game-card {
+            background: var(--text-white);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.6s ease;
+            border-left: 6px solid var(--lavender);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 280px;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .game-card:nth-child(1) { border-left-color: var(--sky-blue); }
+        .game-card:nth-child(2) { border-left-color: var(--soft-yellow); }
+        .game-card:nth-child(3) { border-left-color: var(--mint-green); }
+        .game-card:nth-child(4) { border-left-color: var(--light-pink); }
+        .game-card:nth-child(5) { border-left-color: var(--lavender); }
+        .game-card:nth-child(6) { border-left-color: var(--sky-blue); }
+        .game-card:nth-child(7) { border-left-color: var(--soft-yellow); }
+        .game-card:nth-child(8) { border-left-color: var(--mint-green); }
+
+        .game-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .game-card:nth-child(2) .game-icon { animation-delay: 0.2s; }
+        .game-card:nth-child(3) .game-icon { animation-delay: 0.4s; }
+        .game-card:nth-child(4) .game-icon { animation-delay: 0.6s; }
+        .game-card:nth-child(5) .game-icon { animation-delay: 0.8s; }
+
+        .game-card h4 {
+            font-size: 24px;
+            color: var(--dark-purple);
+            margin-bottom: 12px;
+        }
+
+        .game-card p {
+            font-size: 16px;
+            color: var(--text-dark);
+            opacity: 0.8;
+            margin: 0 0 15px 0;
+            flex-grow: 1;
+        }
+
+        .game-difficulty {
+            display: inline-block;
+            background: var(--soft-yellow);
+            color: var(--text-dark);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Comic Neue', cursive, sans-serif;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:hover {
+            animation: bounce 0.5s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--lavender), var(--light-pink));
+            color: var(--text-white);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, var(--mint-green), var(--sky-blue));
+            color: var(--text-dark);
+            font-weight: bold;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-play:hover {
+            background: linear-gradient(135deg, var(--sky-blue), var(--mint-green));
+        }
+
+        /* ==================== REWARDS SECTION ==================== */
+        .rewards-section {
+            background: var(--text-white);
+            border-radius: 25px;
+            padding: 40px;
+            margin: 60px auto;
+            max-width: 700px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border: 3px solid var(--light-pink);
+            animation: slideIn 0.6s ease 0.2s both;
+        }
+
+        /* handwriting upload inside rewards */
+        .handwriting-upload-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .handwriting-upload-section input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+        .handwriting-result {
+            margin-top: 20px;
+            background: var(--soft-yellow);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+        .handwriting-result img {
+            max-width: 200px;
+            border: 3px solid var(--mint-green);
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .handwriting-result p {
+            font-size: 18px;
+            color: var(--dark-purple);
+        }
+
+        /* layout for speech + handwriting inputs */
+        .multimodal-section {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+        .speech-result {
+            margin-top: 10px;
+            background: var(--soft-yellow);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .speech-section,
+        .handwriting-upload-section {
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+        }
+        .speech-section button,
+        .handwriting-upload-section button {
+            font-size: 2em;
+        }
+        .multimodal-section .game-card {
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #hub-recognized-text {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .handwriting-badge img {
+            max-width: 80px;
+            border-radius: 10px;
+        }
+
+        .rewards-title {
+            font-size: 36px;
+            text-align: center;
+            color: var(--dark-purple);
+            margin-bottom: 30px;
+        }
+
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .reward-badge {
+            background: linear-gradient(135deg, var(--soft-yellow), var(--light-pink));
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid var(--lavender);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .reward-badge:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .reward-emoji {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .reward-text {
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .encouragement-message {
+            background: var(--sky-blue);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: var(--dark-purple);
+            font-weight: bold;
+        }
+
+        /* ==================== FINAL ANALYZER RESULT ==================== */
+        #finalResultCard {
+            background: linear-gradient(135deg, var(--soft-yellow), var(--light-pink));
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 3px solid var(--lavender);
+        }
+        
+        #finalResultCard h3 {
+            font-size: 28px;
+            color: var(--dark-purple);
+            margin-bottom: 20px;
+        }
+        
+        .final-score-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--dark-purple);
+            margin: 15px 0;
+        }
+        
+        .risk-level-badge {
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 15px 0;
+            color: var(--text-white);
+        }
+        
+        .risk-level-badge.low {
+            background: var(--success-green);
+        }
+        
+        .risk-level-badge.medium {
+            background: #FFA500;
+        }
+        
+        .risk-level-badge.high {
+            background: var(--error-red);
+        }
+        
+        #encouragementMsg {
+            font-size: 18px;
+            color: var(--dark-purple);
+            font-style: italic;
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--text-white);
+            border-radius: 10px;
+        }
+        
+        .score-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        
+        .score-item {
+            flex: 1;
+            background: var(--text-white);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--lavender);
+        }
+        
+        .score-item-label {
+            font-size: 14px;
+            color: var(--text-dark);
+            opacity: 0.8;
+        }
+        
+        .score-item-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dark-purple);
+            margin-top: 5px;
+        }
+
+        .encouragement-message {
+            background: var(--sky-blue);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: var(--dark-purple);
+            font-weight: bold;
+        }
+
+        /* ==================== MODAL/POPUP ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--sky-blue), var(--mint-green));
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            font-size: 36px;
+            color: var(--dark-purple);
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .close-btn {
+            color: var(--dark-purple);
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* ==================== GLOW & ANIMATIONS ==================== */
+        .glow-success {
+            animation: glow-green 1s ease-in-out;
+            background: #e8f5e9 !important;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+            background: #ffebee !important;
+        }
+
+        /* ==================== LOADING ==================== */
+        .loading-spinner {
+            border: 4px solid var(--soft-yellow);
+            border-top: 4px solid var(--lavender);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .welcome-text h2 {
+                font-size: 36px;
+            }
+
+            .welcome-illustration {
+                font-size: 80px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .level-card h3 {
+                font-size: 24px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 16px;
+            }
+
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .logo-text h1 {
+                font-size: 20px;
+            }
+
+            .logo-icon {
+                font-size: 36px;
+            }
+
+            .welcome-text h2 {
+                font-size: 28px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .rewards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .reward-emoji {
+                font-size: 35px;
+            }
+
+            .progress-card {
+                padding: 20px;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 16px;
+            }
+        }
+
+        /* ==================== UTILITY CLASSES ==================== */
+        .text-white { color: var(--text-white); }
+        .text-dark { color: var(--text-dark); }
+        .bg-white { background: var(--text-white); }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- ==================== NAVBAR ==================== -->
+    <nav class="navbar">
+        <a href="#" class="logo">
+            <div class="logo-icon">🎮</div>
+            <div class="logo-text">
+                <h1>Learning Dyslexia</h1>
+                <p>Fun Game Hub</p>
+            </div>
+        </a>
+        <ul class="nav-menu">
+            <li><a href="#home" class="nav-link">🏠 Home</a></li>
+            <li><a href="#games" class="nav-link">🎯 Games</a></li>
+            <li><a href="#progress" class="nav-link">📊 Progress</a></li>
+            <li><a href="#rewards" class="nav-link">⭐ Rewards</a></li>
+        </ul>
+    </nav>
+
+    <!-- ==================== MAIN CONTAINER ==================== -->
+    <div class="container">
+        <!-- Welcome Section -->
+        <section class="welcome-section" id="home">
+            <div class="welcome-illustration">🌟</div>
+            <div class="welcome-text">
+                <h2>Welcome to the Game Hub!</h2>
+                <p>Choose a game and start your learning adventure!</p>
+                <p class="welcome-subtext">🚀 Have fun while improving your skills!</p>
+            </div>
+        </section>
+
+        <!-- Progress Card -->
+        <div class="progress-card" id="progress">
+            <div class="progress-header">
+                <h3>📈 Your Progress</h3>
+                <div class="progress-stat" id="collectedCount">0/96</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-info">
+                <strong>Keep going!</strong> 🎊 Complete more levels to unlock amazing rewards!
+            </div>
+        </div>
+
+        <!-- Games Section -->
+        <section class="games-section" id="games">
+            <h2 class="section-title">🎯 Our Exciting Games</h2>
+            
+            <div class="games-grid" id="gamesGrid">
+                <!-- Games will be dynamically loaded here -->
+                <div class="loading-spinner"></div>
+            </div>
+        </section>
+
+        <!-- Rewards Section -->
+        <section class="rewards-section" id="rewards">
+            <h2 class="rewards-title">🏆 Your Rewards</h2>
+            <div class="rewards-grid" id="rewardsGrid">
+                <div class="reward-badge">
+                    <span class="reward-emoji">⭐</span>
+                    <div class="reward-text">First Star</div>
+                </div>
+                <div class="reward-badge">
+                    <span class="reward-emoji">🏅</span>
+                    <div class="reward-text">Explorer</div>
+                </div>
+                <div class="reward-badge">
+                    <span class="reward-emoji">🎖️</span>
+                    <div class="reward-text">Champion</div>
+                </div>
+                <div class="reward-badge">
+                    <span class="reward-emoji">👑</span>
+                    <div class="reward-text">King/Queen</div>
+                </div>
+                <div class="reward-badge">
+                    <span class="reward-emoji">💎</span>
+                    <div class="reward-text">Legend</div>
+                </div>
+                <div class="reward-badge">
+                    <span class="reward-emoji">🌟</span>
+                    <div class="reward-text">Master</div>
+                </div>
+            </div>
+            <div class="encouragement-message">
+                🎉 Keep playing and unlock amazing badges! You're doing great! 🎉
+            </div>
+
+            <!-- multimodal input cards -->
+            <div class="multimodal-section">
+                <div class="speech-section game-card">
+                    <div>
+                        <div class="game-icon">🎤</div>
+                        <h4>Speech Test</h4>
+                        <p>Read the sentence aloud and see your score.</p>
+                    </div>
+                    <button class="btn btn-play" id="hub-mic-btn">Start Speaking</button>
+                    <div class="speech-result" id="hubSpeechResult" style="display:none;">
+                        <p id="hub-recognized-text"></p>
+                        <p id="hub-transcript" style="font-size:14px; opacity:0.8;"></p>
+                        <p id="hub-speech-score" style="font-weight:bold; margin-top:8px;"></p>
+                    </div>
+                </div>
+                <div class="handwriting-upload-section game-card" id="handwritingSection">
+                    <div>
+                        <div class="game-icon">✍️</div>
+                        <h4>Handwriting</h4>
+                        <p>Upload a sample and get a score.</p>
+                    </div>
+                    <input type="file" id="handwritingFile" accept="image/*">
+                    <button class="btn btn-play" id="handwritingSubmit">Analyze Writing</button>
+                    <div class="handwriting-result" id="handwritingResult" style="display:none;">
+                        <img id="handwritingPreview" src="" alt="Uploaded handwriting" />
+                        <p id="handwritingScoreText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- combined speech + handwriting result -->
+            <div id="combinedResultContainer" style="text-align:center; margin-top:30px;">
+                <button class="btn btn-success" id="combinedResultBtn" disabled>📊 Check Overall Risk</button>
+                <div id="finalResultCard" style="display:none; margin-top:20px;">
+                    <h3>🎯 Your Analysis Results</h3>
+                    <div class="final-score-display" id="finalScoreDisplay"></div>
+                    <div class="risk-level-badge" id="riskBadge"></div>
+                    <div id="encouragementMsg"></div>
+                    <div class="score-breakdown">
+                        <div class="score-item">
+                            <div class="score-item-label">🎤 Speech Score</div>
+                            <div class="score-item-value" id="displaySpeechScore">—</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-item-label">✍️ Handwriting Score</div>
+                            <div class="score-item-value" id="displayHandwritingScore">—</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-item-label">🎮 Games Progress</div>
+                            <div class="score-item-value" id="displayGamesProgress">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        // ==================== GAME CATALOG ==================== 
+        const GAMES = [
+            {
+                name: 'Color Fuse',
+                icon: '🎨',
+                description: 'Match colors and learn about combinations. Fun and colorful!',
+                file: 'color_fuse.html',
+                difficulty: 'Easy'
+            },
+            {
+                name: 'Match Rhyming Words',
+                icon: '🔤',
+                description: 'Find words that sound similar. Improve your phonics skills!',
+                file: 'match_rhyming_words.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Memory Match',
+                icon: '🧠',
+                description: 'Test your memory with fun matching games. Can you remember them all?',
+                file: 'memory_match.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Speed Tap',
+                icon: '⚡',
+                description: 'Quick reflexes needed! Tap fast and beat the clock!',
+                file: 'speed_tap.html',
+                difficulty: 'Hard'
+            },
+            {
+                name: 'Number Order',
+                icon: '🔢',
+                description: 'Arrange numbers in the correct sequence. Master the order!',
+                file: 'number_order_tap.html',
+                difficulty: 'Easy'
+            },
+            {
+                name: 'Math Burst',
+                icon: '💫',
+                description: 'Solve math problems quickly. Get faster with every attempt!',
+                file: 'math_burst.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Sequence Memory',
+                icon: '🎵',
+                description: 'Remember and repeat sequences. Challenge your brain!',
+                file: 'sequence_memory.html',
+                difficulty: 'Hard'
+            },
+            {
+                name: 'Phoneme Identification',
+                icon: '🔊',
+                description: 'Identify sounds and phonemes. Improve your listening skills!',
+                file: 'phoneme_identification.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Direction Dash',
+                icon: '🧭',
+                description: 'Follow directions and navigate. Test your spatial awareness!',
+                file: 'direction_dash.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Shape Pop',
+                icon: '🔷',
+                description: 'Pop shapes and learn about geometry. Fun and educational!',
+                file: 'shape_pop.html',
+                difficulty: 'Easy'
+            },
+            {
+                name: 'Multiples Tap',
+                icon: '✖️',
+                description: 'Tap multiple numbers. Master multiplication!',
+                file: 'multiples_tap.html',
+                difficulty: 'Medium'
+            },
+            {
+                name: 'Lightning Tap',
+                icon: '⚡💡',
+                description: 'Lightning-fast tapping challenge. Beat your high score!',
+                file: 'lightning_tap.html',
+                difficulty: 'Hard'
+            }
+        ];
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎮 Learning Dyslexia Game Hub Loaded!');
+            loadGames();
+            updateProgress();
+            setupNavigation();
+            loadProgressFromBackend();
+        });
+
+        // ==================== LOAD GAMES ==================== 
+        function loadGames() {
+            const gamesGrid = document.getElementById('gamesGrid');
+            gamesGrid.innerHTML = '';
+
+            GAMES.forEach((game) => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                gameCard.innerHTML = `
+                    <div>
+                        <div class="game-icon">${game.icon}</div>
+                        <h4>${game.name}</h4>
+                        <p>${game.description}</p>
+                        <div class="game-difficulty">${game.difficulty}</div>
+                    </div>
+                    <button class="btn btn-play" onclick="goToGame('${game.file}', '${game.name}')">
+                        ▶️ Play Now
+                    </button>
+                `;
+                gamesGrid.appendChild(gameCard);
+            });
+        }
+
+        // ==================== NAVIGATION ====================
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href.startsWith('#')) {
+                        e.preventDefault();
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }
+                });
+            });
+        }
+
+        // ==================== PROGRESS TRACKING ====================
+        function calculateGameProgress() {
+            let progress = JSON.parse(localStorage.getItem('gameProgress')) || {
+                levelsCompleted: 0,
+                totalLevels: 96,
+                percentage: 0,
+                gamesPlayed: 0
+            };
+            return progress;
+        }
+
+        function updateProgress() {
+            const progress = calculateGameProgress();
+            const progressFill = document.getElementById('progressFill');
+            const collectedCount = document.getElementById('collectedCount');
+            
+            const pct = Math.round((progress.levelsCompleted / progress.totalLevels) * 100);
+            
+            if (collectedCount) {
+                collectedCount.textContent = `${progress.levelsCompleted}/96`;
+            }
+            if (progressFill) {
+                progressFill.style.width = pct + '%';
+                if (pct > 5) {
+                    progressFill.textContent = pct + '%';
+                }
+            }
+            
+            console.log(`📊 Progress: ${progress.levelsCompleted}/96 (${pct}%)`);
+        }
+
+        // ==================== BACKEND INTEGRATION ====================
+        function loadProgressFromBackend() {
+            // Fetch progress from backend API
+            fetch('/api/user/progress')
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('No backend API available');
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        // Update localStorage with backend data
+                        localStorage.setItem('gameProgress', JSON.stringify(data));
+                        updateProgress();
+                        console.log('✅ Progress synced from backend');
+                    }
+                })
+                .catch(error => {
+                    console.log('📱 Using local progress:', error);
+                });
+        }
+
+        function saveProgressToBackend(progress) {
+            // Save progress to backend API
+            fetch('/api/user/progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(progress)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Progress saved to backend');
+                }
+            })
+            .catch(error => {
+                console.log('⚠️ Could not save to backend:', error);
+                // Still save to localStorage as fallback
+            });
+        }
+
+        // ==================== GAME NAVIGATION ====================
+        function goToGame(gamePage, gameName) {
+            console.log(`📂 Starting game: ${gameName}`);
+            
+            // Update progress locally
+            let progress = calculateGameProgress();
+            progress.gamesPlayed++;
+            localStorage.setItem('gameProgress', JSON.stringify(progress));
+            
+            // Show confirmation and navigate
+            showGameModal(gamePage, gameName);
+        }
+
+        // ==================== MODAL MANAGEMENT ====================
+        function showGameModal(gameName, displayName) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>🎮 Ready to Play?</h2>
+                    <p style="font-size: 20px; margin: 20px 0;">Do you want to start <strong>${displayName}</strong>?</p>
+                    <button class="btn btn-primary" onclick="window.location.href='${gameName}'" style="margin-right: 10px;">
+                        ✅ Yes, Let's Go!
+                    </button>
+                    <button class="btn" style="background: var(--error-red); color: var(--text-white); margin-left: 10px;" onclick="this.parentElement.parentElement.remove()">
+                        ❌ Cancel
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // ==================== PERIODIC UPDATES ====================
+        setInterval(() => {
+            updateProgress();
+            loadProgressFromBackend();
+        }, 3000);
+
+        // ==================== ON PAGE LEAVE ====================
+        window.addEventListener('beforeunload', function() {
+            const progress = calculateGameProgress();
+            saveProgressToBackend(progress);
+        });
+
+        // Log performance
+        window.addEventListener('load', function() {
+            console.log('✅ All resources loaded!');
+            if (window.performance && window.performance.timing) {
+                const perfData = window.performance.timing;
+                const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+                console.log(`⏱️ Page Load Time: ${pageLoadTime}ms`);
+            }
+        });
+
+        // ==================== SPEECH INPUT LOGIC ====================
+        let hubSpeechScore = 0;
+        let hubHandwritingScore = 0;
+        let hubGamesProgressScore = 0;
+
+        function updateCombinedButton() {
+            const btn = document.getElementById('combinedResultBtn');
+            const container = document.getElementById('combinedResultContainer');
+            if (btn && container && (hubSpeechScore > 0 || hubHandwritingScore > 0)) {
+                btn.disabled = false;
+                container.style.display = 'block';
+            }
+        }
+
+        function getGamesProgressScore() {
+            const progress = calculateGameProgress();
+            return progress.levelsCompleted / progress.totalLevels;
+        }
+
+        const hubMicBtn = document.getElementById('hub-mic-btn');
+        const hubRecognizedText = document.getElementById('hub-recognized-text');
+        let hubRecognition;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            hubRecognition = new SpeechRecognition();
+            hubRecognition.lang = 'en-US';
+            hubRecognition.interimResults = false;
+            hubRecognition.maxAlternatives = 1;
+            hubRecognition.onresult = event => {
+                const text = event.results[0][0].transcript;
+                evaluateHubSpeech(text);
+            };
+            hubRecognition.onerror = e => {
+                console.error('Hub speech error', e);
+                const errEl = document.getElementById('hub-recognized-text');
+                const transEl = document.getElementById('hub-transcript');
+                const resultEl = document.getElementById('hubSpeechResult');
+                let msg = `Error: ${e.error || e.message}`;
+                if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                    msg = 'Microphone access denied. Please allow microphone use in your browser settings and refresh.';
+                }
+                if (errEl) errEl.textContent = msg;
+                if (transEl) transEl.textContent = '';
+                if (resultEl) resultEl.style.display = 'block';
+            };
+        }
+        function evaluateHubSpeech(recognized) {
+            const target = "The cat runs fast".toLowerCase().split(' ');
+            const words = recognized.toLowerCase().trim().split(/\s+/);
+            hubRecognizedText.innerHTML = '';
+            let correctCount = 0;
+            target.forEach((word, idx) => {
+                const user = words[idx];
+                const span = document.createElement('span');
+                span.textContent = user ? user : '...';
+                span.className = (user === word) ? 'correct' : 'wrong';
+                if (user === word) correctCount++;
+                hubRecognizedText.appendChild(span);
+                hubRecognizedText.appendChild(document.createTextNode(' '));
+            });
+            hubSpeechScore = correctCount / target.length;
+            console.log('hubSpeechScore', hubSpeechScore);
+            updateCombinedButton();
+        }
+        if (hubMicBtn) {
+            hubMicBtn.addEventListener('click', () => {
+                if (hubRecognition) hubRecognition.start();
+            });
+        }
+
+        // ==================== HANDWRITING UPLOAD LOGIC ====================
+        const handwritingFileInput = document.getElementById('handwritingFile');
+        const handwritingSubmit = document.getElementById('handwritingSubmit');
+        const handwritingPreview = document.getElementById('handwritingPreview');
+        const handwritingResult = document.getElementById('handwritingResult');
+        const handwritingScoreText = document.getElementById('handwritingScoreText');
+        const rewardsGrid = document.getElementById('rewardsGrid');
+
+        handwritingFileInput.addEventListener('change', () => {
+            const file = handwritingFileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    handwritingPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                handwritingResult.style.display = 'none';
+            }
+        });
+
+        handwritingSubmit.addEventListener('click', async () => {
+            const file = handwritingFileInput.files[0];
+            if (!file) {
+                alert('Please select an image first.');
+                return;
+            }
+
+            const form = new FormData();
+            form.append('file', file);
+            try {
+                const resp = await fetch('/handwriting-check', {
+                    method: 'POST',
+                    body: form
+                });
+                if (!resp.ok) {
+                    let errText = `server returned ${resp.status}`;
+                    try {
+                        const errBody = await resp.json();
+                        if (errBody && errBody.detail) errText = errBody.detail;
+                    } catch (e) {
+                        try { errText = await resp.text(); } catch (e) {}
+                    }
+                    throw new Error(errText);
+                }
+                const data = await resp.json();
+                const score = data.handwritingScore;
+                handwritingResult.style.display = 'block';
+                handwritingScoreText.textContent = `Score: ${Math.round(score*100)}%`;
+
+                // award a badge based on score
+                let emoji = '✍️';
+                let text = 'Writer';
+                if (score > 0.8) { emoji = '🌟'; text = 'Top Writer'; }
+                else if (score > 0.5) { emoji = '🏅'; text = 'Good Writer'; }
+                const badge = document.createElement('div');
+                badge.className = 'reward-badge';
+                badge.innerHTML = `<span class="reward-emoji">${emoji}</span><div class="reward-text">${text}</div>`;
+                rewardsGrid.appendChild(badge);
+
+                const imgBadge = document.createElement('div');
+                imgBadge.className = 'reward-badge handwriting-badge';
+                imgBadge.innerHTML = `<img src="${handwritingPreview.src}" alt="handwriting" />`;
+                rewardsGrid.appendChild(imgBadge);
+
+                console.log('Handwriting score', score);
+                hubHandwritingScore = score;
+                updateCombinedButton();
+            } catch (err) {
+                console.error('handwriting upload failed', err);
+                alert('Failed to evaluate handwriting. Try again later.');
+            }
+        });
+
+        // ==================== COMBINED RESULT ====================
+        const combinedBtn = document.getElementById('combinedResultBtn');
+        if (combinedBtn) {
+            combinedBtn.addEventListener('click', async () => {
+                try {
+                    hubGamesProgressScore = getGamesProgressScore();
+                    const resp = await fetch('/final-check', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            speechScore: hubSpeechScore, 
+                            handwritingScore: hubHandwritingScore,
+                            gamesProgressScore: hubGamesProgressScore
+                        })
+                    });
+                    if (!resp.ok) throw new Error(resp.status);
+                    const data = await resp.json();
+                    
+                    // Show result card
+                    const resultCard = document.getElementById('finalResultCard');
+                    resultCard.style.display = 'block';
+                    
+                    // Populate score display
+                    const scoreEl = document.getElementById('finalScoreDisplay');
+                    scoreEl.textContent = `${Math.round(data.finalScore*100)}%`;
+                    
+                    // Populate risk badge with color coding
+                    const badgeEl = document.getElementById('riskBadge');
+                    badgeEl.textContent = `Risk Level: ${data.riskLevel}`;
+                    badgeEl.className = `risk-level-badge ${data.riskLevel.toLowerCase()}`;
+                    
+                    // Populate encouragement message
+                    const msgEl = document.getElementById('encouragementMsg');
+                    msgEl.textContent = `✨ ${data.message}`;
+                    
+                    // Display individual scores
+                    document.getElementById('displaySpeechScore').textContent = `${Math.round(data.speechScore*100)}%`;
+                    document.getElementById('displayHandwritingScore').textContent = `${Math.round(data.handwritingScore*100)}%`;
+                    
+                    // Display games progress
+                    const gameProgressEl = document.getElementById('displayGamesProgress');
+                    if (gameProgressEl) {
+                        gameProgressEl.textContent = `${Math.round(data.gamesProgressScore*100)}%`;
+                    }
+                    
+                    console.log('Final analysis with games', data);
+                } catch (e) {
+                    console.error('final-check failed', e);
+                    alert('Could not compute combined risk.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

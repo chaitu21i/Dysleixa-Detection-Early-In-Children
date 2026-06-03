@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Color Fuse — Reflex Match</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFF4A3 100%);
+        --tile-bg: #FFD6E0;
+        --tile-flash: #FFF4A3;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        text-align: center;
+        font-size: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        color: #2c2c2c;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      #targetColorDisplay {
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(255, 107, 157, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #targetSwatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, transform 0.15s;
+        user-select: none;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      .tile.tap-flash {
+        background-color: var(--tile-flash) !important;
+        transform: scale(0.95);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.95); }
+        50% { transform: scale(1.1); }
+      }
+
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.95);
+        font-size: 64px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer">
+      <div id="header">COLOR FUSE — REFLEX MATCH</div>
+
+      <div id="hud">
+        <div>Level: <span id="levelDisplay">1</span></div>
+
+        <div id="targetColorDisplay">
+          TARGET:
+          <div id="targetSwatch"></div>
+          <span id="targetName"></span>
+        </div>
+
+        <div>Score: <span id="scoreDisplay">0</span></div>
+        <div>Hits: <span id="hitsDisplay">0</span></div>
+        <div>Misses: <span id="missesDisplay">0</span></div>
+      </div>
+
+      <div id="grid"></div>
+
+      <div id="countdownOverlay">3</div>
+
+      <div id="winOverlay">
+        <div id="winText"></div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ==========================
+    CONFIGURATION
+========================== */
+      const LEVELS = [
+        { rows: 3, cols: 3, speed: 1400, cycles: 12 },
+        { rows: 4, cols: 4, speed: 1100, cycles: 18 },
+        { rows: 5, cols: 5, speed: 900, cycles: 24 },
+      ];
+
+      const COLORS = [
+        { key: "red", name: "RED", value: "#ff4b4b" },
+        { key: "blue", name: "BLUE", value: "#3a7bff" },
+        { key: "green", name: "GREEN", value: "#42ff95" },
+        { key: "yellow", name: "YELLOW", value: "#ffe14a" },
+        { key: "pink", name: "PINK", value: "#ff73dc" },
+      ];
+
+      const TARGET_CHANGE_INTERVAL = 4;
+
+      /* ==========================
+    DOM
+========================== */
+      const gridEl = document.getElementById("grid");
+      const countdownEl = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+      const nextBtn = document.getElementById("nextLevelBtn");
+
+      const levelDisplay = document.getElementById("levelDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+
+      const targetSwatch = document.getElementById("targetSwatch");
+      const targetName = document.getElementById("targetName");
+
+      /* ==========================
+    GAME STATE
+========================== */
+      let currentLevel = 0;
+      let tiles = [];
+      let activeShown = null; // { index, colorKey, shownAt }
+      let hits = 0;
+      let misses = 0;
+      let score = 0;
+      let cycleCount = 0;
+      let gameLog = [];
+      let locked = false;
+      let targetColor = COLORS[0];
+      let cycleTimer = null;
+
+      /* ==========================
+    UTIL
+========================== */
+      const rand = (max) => Math.floor(Math.random() * max);
+      const pick = (arr) => arr[rand(arr.length)];
+
+      /* ==========================
+    BUILD GRID
+========================== */
+      function buildGrid(level) {
+        gridEl.innerHTML = "";
+        tiles = [];
+
+        gridEl.style.gridTemplateRows = `repeat(${level.rows}, 1fr)`;
+        gridEl.style.gridTemplateColumns = `repeat(${level.cols}, 1fr)`;
+
+        const total = level.rows * level.cols;
+
+        for (let i = 0; i < total; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.addEventListener("click", () => tileClicked(i));
+          gridEl.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      /* ==========================
+    START GAME / COUNTDOWN
+========================== */
+      function startLevel(idx) {
+        currentLevel = idx;
+        hits = 0;
+        misses = 0;
+        score = 0;
+        cycleCount = 0;
+        gameLog = [];
+        activeShown = null;
+        locked = false;
+
+        levelDisplay.textContent = currentLevel + 1;
+        updateHUD();
+
+        targetColor = pick(COLORS);
+        updateTarget();
+
+        buildGrid(LEVELS[currentLevel]);
+
+        showCountdown().then(runGame);
+      }
+
+      function showCountdown() {
+        return new Promise((res) => {
+          countdownEl.style.opacity = 1;
+          let c = 3;
+          countdownEl.textContent = c;
+
+          const timer = setInterval(() => {
+            c--;
+            if (c > 0) {
+              countdownEl.textContent = c;
+            } else {
+              clearInterval(timer);
+              countdownEl.style.opacity = 0;
+              res();
+            }
+          }, 900);
+        });
+      }
+
+      /* ==========================
+    HUD / TARGET DISPLAY
+========================== */
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      function updateTarget() {
+        targetSwatch.style.background = targetColor.value;
+        targetName.textContent = targetColor.name;
+      }
+
+      /* ==========================
+    MAIN CYCLE LOOP
+========================== */
+      function runGame() {
+        locked = false;
+        scheduleCycle();
+      }
+
+      function scheduleCycle() {
+        const lvl = LEVELS[currentLevel];
+        if (cycleCount >= lvl.cycles) return endLevel();
+
+        nextCycle();
+
+        cycleTimer = setTimeout(scheduleCycle, lvl.speed);
+      }
+
+      function nextCycle() {
+        // Miss if last shown tile was target
+        if (activeShown) {
+          const wasTarget = activeShown.colorKey === targetColor.key;
+          if (wasTarget) {
+            misses++;
+            score = Math.max(0, score - 2);
+            gameLog.push({
+              action: "miss",
+              tile: activeShown.index,
+              color: activeShown.colorKey,
+              rt: Date.now() - activeShown.shownAt,
+            });
+          }
+          tiles[activeShown.index].style.background = "";
+          activeShown = null;
+        }
+
+        // Change target periodically
+        if (cycleCount > 0 && cycleCount % TARGET_CHANGE_INTERVAL === 0) {
+          let newT;
+          do newT = pick(COLORS);
+          while (newT.key === targetColor.key);
+
+          targetColor = newT;
+          updateTarget();
+        }
+
+        // Show new colored tile
+        const idx = rand(tiles.length);
+
+        // 30% chance the shown color is target
+        let selected;
+        if (Math.random() < 0.3) {
+          selected = targetColor;
+        } else {
+          // pick a non-target color
+          const others = COLORS.filter((c) => c.key !== targetColor.key);
+          selected = pick(others);
+        }
+
+        tiles[idx].style.background = selected.value;
+
+        activeShown = {
+          index: idx,
+          colorKey: selected.key,
+          shownAt: Date.now(),
+        };
+
+        gameLog.push({
+          action: "show",
+          tile: idx,
+          color: selected.key,
+          cycle: cycleCount,
+        });
+
+        cycleCount++;
+        updateHUD();
+      }
+
+      /* ==========================
+    CLICK HANDLING
+========================== */
+      function tileClicked(idx) {
+        if (locked || !activeShown) {
+          // invalid tap
+          misses++;
+          score = Math.max(0, score - 2);
+          updateHUD();
+          return;
+        }
+
+        if (idx !== activeShown.index) {
+          // wrong tile tap
+          misses++;
+          score = Math.max(0, score - 2);
+          updateHUD();
+          return;
+        }
+
+        const isMatch = activeShown.colorKey === targetColor.key;
+        const rt = Date.now() - activeShown.shownAt;
+
+        if (isMatch) {
+          // correct
+          hits++;
+          score += 10;
+          gameLog.push({
+            action: "hit",
+            tile: idx,
+            color: activeShown.colorKey,
+            rt,
+          });
+
+          tiles[idx].classList.add("tap-flash");
+          setTimeout(() => tiles[idx].classList.remove("tap-flash"), 200);
+
+          tiles[idx].style.background = "";
+          activeShown = null;
+          updateHUD();
+        } else {
+          // wrong color
+          misses++;
+          score = Math.max(0, score - 2);
+          updateHUD();
+        }
+      }
+
+      /* ==========================
+    END LEVEL
+========================== */
+      function endLevel() {
+        locked = true;
+        clearTimeout(cycleTimer);
+
+        if (activeShown) {
+          tiles[activeShown.index].style.background = "";
+          activeShown = null;
+        }
+
+        const result = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        let saved = JSON.parse(localStorage.getItem("color_fuse")) || [];
+        saved[currentLevel] = result;
+        localStorage.setItem("color_fuse", JSON.stringify(saved));
+
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits: ${hits}, Misses: ${misses}, Score: ${score}`;
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+
+        if (currentLevel < LEVELS.length - 1) {
+          // Go to next level
+          startLevel(currentLevel + 1);
+        } else {
+          // All 3 levels complete → return to home page
+          window.location.href = "home_page.html";
+        }
+      });
+
+      /* start game */
+      startLevel(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shape Pop — Reflex Switch</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --tile-bg: #FFD6E0;
+        --tile-active: #FFF4A3;
+        --tile-flash: #FFF;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        letter-spacing: 1px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        text-align: center;
+        font-size: 18px;
+        color: #2c2c2c;
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .hud-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #targetDisplay {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(255, 107, 157, 0.15);
+      }
+
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        transition: background 0.18s, transform 0.12s;
+        user-select: none;
+        color: #fff;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+
+      .tile.active {
+        background: var(--tile-active) !important;
+        color: #333;
+      }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      .tile.tap-flash {
+        background-color: var(--tile-flash) !important;
+        color: #333;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        transform: scale(0.98);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.98); }
+        50% { transform: scale(1.1); }
+      }
+
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--heading-font);
+        color: #FF6B9D;
+        font-size: 64px;
+        background: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        font-weight: bold;
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+
+      #targetSymbol {
+        font-size: 28px;
+        filter: drop-shadow(0 0 6px rgba(69, 245, 255, 0.4));
+      }
+
+      /* small responsive tweaks */
+      @media (max-width: 420px) {
+        .tile {
+          font-size: 28px;
+        }
+        #header {
+          font-size: 20px;
+        }
+        #countdownOverlay,
+        #winOverlay {
+          font-size: 44px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="header">SHAPE POP — REFLEX SWITCH</div>
+
+      <div id="hud">
+        <div class="hud-item">Level: <span id="levelDisplay">1</span></div>
+        <div class="hud-item">
+          <div id="targetDisplay">
+            TARGET: <span id="targetSymbol">★</span>
+            <span
+              id="targetName"
+              style="opacity: 0.85; font-size: 14px; margin-left: 6px"
+            ></span>
+          </div>
+        </div>
+        <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
+        <div class="hud-item">Hits: <span id="hitsDisplay">0</span></div>
+        <div class="hud-item">Misses: <span id="missesDisplay">0</span></div>
+      </div>
+
+      <div id="grid"></div>
+
+      <div id="countdownOverlay">3</div>
+
+      <div id="winOverlay">
+        <div id="winText">Level Complete!</div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ------------------------
+         Configuration / Leveling
+         ------------------------ */
+      const LEVELS = [
+        { rows: 3, cols: 3, speed: 1800, cycles: 12 }, // level 1
+        { rows: 4, cols: 4, speed: 1400, cycles: 18 }, // level 2
+        { rows: 5, cols: 5, speed: 1100, cycles: 24 }, // level 3
+      ];
+
+      // shapes available
+      const SHAPES = [
+        { key: "circle", symbol: "●", name: "CIRCLE" },
+        { key: "square", symbol: "■", name: "SQUARE" },
+        { key: "triangle", symbol: "▲", name: "TRIANGLE" },
+        { key: "star", symbol: "★", name: "STAR" },
+      ];
+
+      // change target every N cycles (keeps gameplay dynamic)
+      const TARGET_CHANGE_INTERVAL = 4;
+
+      /* ------------------------
+         DOM references
+         ------------------------ */
+      const gridEl = document.getElementById("grid");
+      const countdownEl = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+      const nextBtn = document.getElementById("nextLevelBtn");
+      const levelDisplay = document.getElementById("levelDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+      const targetSymbol = document.getElementById("targetSymbol");
+      const targetName = document.getElementById("targetName");
+
+      /* ------------------------
+         Game state
+         ------------------------ */
+      let currentLevel = 0;
+      let tiles = [];
+      let activeShown = null; // { index, shapeKey, shownAt }
+      let hits = 0;
+      let misses = 0;
+      let score = 0;
+      let cycleCount = 0;
+      let totalCycles = 0;
+      let gameLog = [];
+      let locked = false;
+      let targetShape = SHAPES[0]; // object from SHAPES
+      let cycleTimer = null;
+
+      /* ------------------------
+         Helpers
+         ------------------------ */
+      function randInt(max) {
+        return Math.floor(Math.random() * max);
+      }
+      function pickRandom(arr) {
+        return arr[randInt(arr.length)];
+      }
+
+      /* ------------------------
+         Build grid
+         ------------------------ */
+      function buildGrid(level) {
+        gridEl.innerHTML = "";
+        tiles = [];
+        const { rows, cols } = level;
+        gridEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        const total = rows * cols;
+        for (let i = 0; i < total; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.dataset.index = i;
+          t.addEventListener("click", () => tileClicked(i));
+          gridEl.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      /* ------------------------
+         Start / Countdown
+         ------------------------ */
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+        hits = 0;
+        misses = 0;
+        score = 0;
+        cycleCount = 0;
+        gameLog = [];
+        activeShown = null;
+        locked = false;
+
+        levelDisplay.textContent = currentLevel + 1;
+        updateHUD();
+
+        buildGrid(LEVELS[currentLevel]);
+
+        // choose initial target
+        targetShape = pickRandom(SHAPES);
+        updateTargetDisplay();
+
+        showCountdown(3).then(() => runGame());
+      }
+
+      function showCountdown(sec) {
+        return new Promise((res) => {
+          countdownEl.style.opacity = 1;
+          countdownEl.style.pointerEvents = "auto";
+          let c = sec;
+          countdownEl.textContent = c;
+          const interval = setInterval(() => {
+            c--;
+            if (c > 0) {
+              countdownEl.textContent = c;
+            } else {
+              clearInterval(interval);
+              countdownEl.style.opacity = 0;
+              countdownEl.style.pointerEvents = "none";
+              res();
+            }
+          }, 1000);
+        });
+      }
+
+      /* ------------------------
+         HUD / Target display
+         ------------------------ */
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      function updateTargetDisplay() {
+        targetSymbol.textContent = targetShape.symbol;
+        targetName.textContent = targetShape.name;
+      }
+
+      /* ------------------------
+         Main loop: cycle
+         ------------------------ */
+      function runGame() {
+        locked = false;
+        scheduleNextCycle();
+      }
+
+      function scheduleNextCycle() {
+        const { speed, cycles } = LEVELS[currentLevel];
+
+        // stop condition
+        if (cycleCount >= cycles) {
+          endLevel();
+          return;
+        }
+
+        // run next cycle immediately (show a shape), then set timer for next
+        nextCycle();
+
+        cycleTimer = setTimeout(() => {
+          scheduleNextCycle();
+        }, speed);
+      }
+
+      function nextCycle() {
+        const levelCfg = LEVELS[currentLevel];
+
+        // If a shape was shown previously and still active → handle missed target if it matched target
+        if (activeShown !== null) {
+          const wasTarget = activeShown.shapeKey === targetShape.key;
+          if (wasTarget) {
+            // player failed to tap the matching target in time
+            misses++;
+            score = Math.max(0, score - 2);
+            gameLog.push({
+              time: Date.now(),
+              action: "missed_target",
+              tile: activeShown.index,
+              shape: activeShown.shapeKey,
+              rt: Date.now() - activeShown.shownAt,
+            });
+          } else {
+            // if it was not the target shape and was not tapped, no penalty
+            gameLog.push({
+              time: Date.now(),
+              action: "no_tap_non_target",
+              tile: activeShown.index,
+              shape: activeShown.shapeKey,
+            });
+          }
+          // clear previous visual
+          const prevIdx = activeShown.index;
+          if (tiles[prevIdx]) {
+            tiles[prevIdx].classList.remove("active");
+            tiles[prevIdx].textContent = "";
+          }
+          activeShown = null;
+        }
+
+        // possibly change target every TARGET_CHANGE_INTERVAL cycles (keeps it dynamic)
+        if (cycleCount > 0 && cycleCount % TARGET_CHANGE_INTERVAL === 0) {
+          // pick a new shape different from current
+          let newTarget;
+          do {
+            newTarget = pickRandom(SHAPES);
+          } while (newTarget.key === targetShape.key);
+          targetShape = newTarget;
+          updateTargetDisplay();
+          gameLog.push({
+            time: Date.now(),
+            action: "target_change",
+            newTarget: targetShape.key,
+            cycle: cycleCount,
+          });
+        }
+
+        // Show a new random tile & shape (one shape per cycle)
+        const idx = randInt(tiles.length);
+        const shape = pickRandom(SHAPES);
+
+        // set active shown
+        activeShown = { index: idx, shapeKey: shape.key, shownAt: Date.now() };
+
+        // render tile
+        (function renderTile(i, s) {
+          const t = tiles[i];
+          if (!t) return;
+          t.classList.add("active");
+          t.textContent = s.symbol;
+        })(idx, shape);
+
+        // log show
+        gameLog.push({
+          time: Date.now(),
+          action: "show",
+          tile: idx,
+          shape: shape.key,
+          cycle: cycleCount,
+        });
+
+        cycleCount++;
+        totalCycles = cycleCount;
+        updateHUD();
+      }
+
+      /* ------------------------
+         Tile click handling
+         ------------------------ */
+      function tileClicked(idx) {
+        if (locked) return;
+
+        // If nothing is shown (or already cleared)
+        if (activeShown === null) {
+          // wrong tap (tapped empty)
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({
+            time: Date.now(),
+            action: "wrong_empty_tap",
+            tile: idx,
+          });
+          updateHUD();
+          return;
+        }
+
+        // Clicked a tile; check if it's the active one
+        if (idx !== activeShown.index) {
+          // clicking a different tile (shouldn't normally be active) -> wrong tap
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({
+            time: Date.now(),
+            action: "wrong_tile_tap",
+            clicked: idx,
+            active: activeShown.index,
+          });
+          updateHUD();
+          return;
+        }
+
+        // Clicked the active tile
+        const wasMatch = activeShown.shapeKey === targetShape.key;
+        const rt = Date.now() - activeShown.shownAt;
+
+        if (wasMatch) {
+          // correct hit
+          hits++;
+          score += 10;
+          gameLog.push({
+            time: Date.now(),
+            action: "hit",
+            tile: idx,
+            shape: activeShown.shapeKey,
+            rt,
+          });
+
+          // flash + clear
+          tiles[idx].classList.add("tap-flash");
+          setTimeout(() => {
+            tiles[idx].classList.remove("tap-flash");
+          }, 200);
+
+          tiles[idx].classList.remove("active");
+          tiles[idx].textContent = "";
+          activeShown = null; // IMPORTANT: prevent nextCycle from counting this as missed target
+          updateHUD();
+          return;
+        } else {
+          // tapped active tile but it was not the target -> wrong
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({
+            time: Date.now(),
+            action: "wrong_active_tap",
+            tile: idx,
+            shape: activeShown.shapeKey,
+            target: targetShape.key,
+            rt,
+          });
+          // keep the tile displayed until the cycle ends (player missed)
+          updateHUD();
+          return;
+        }
+      }
+
+      /* ------------------------
+         End level & LocalStorage saving
+         ------------------------ */
+      function endLevel() {
+        locked = true;
+        clearTimeout(cycleTimer);
+
+        // clear any visible tile
+        if (activeShown !== null) {
+          const idx = activeShown.index;
+          if (tiles[idx]) {
+            tiles[idx].classList.remove("active");
+            tiles[idx].textContent = "";
+          }
+          activeShown = null;
+        }
+
+        // Build result object
+        const result = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        // Load existing array or start new
+        let saved = JSON.parse(localStorage.getItem("shape_pop")) || [];
+
+        // Save/replace at index = currentLevel so array contains entries per level
+        saved[currentLevel] = result;
+
+        localStorage.setItem("shape_pop", JSON.stringify(saved));
+
+        // Show win overlay
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits:${hits}, Misses:${misses}, Score:${score}`;
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      /* ------------------------
+         Next level handler
+         ------------------------ */
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+        if (currentLevel < LEVELS.length - 1) startLevel(currentLevel + 1);
+        else window.location.href = "home_page.html";
+      });
+
+      /* ------------------------
+         Start the first level automatically
+         ------------------------ */
+      startLevel(0);
+    </script>
+  </body>
+</html>

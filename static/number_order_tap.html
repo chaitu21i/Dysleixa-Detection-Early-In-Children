@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Number Order Tap</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --tile-bg: #FFD6E0;
+        --tile-flash: #FFF4A3;
+        --tile-wrong: #E4C1F9;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      /* MAIN LAYOUT */
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        color: #2c2c2c;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      .hud-item {
+        display: inline-flex;
+        gap: 8px;
+        font-size: 18px;
+      }
+
+      /* GRID */
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        user-select: none;
+        color: #fff;
+        transition: transform 0.3s ease, background 0.25s;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+        font-family: var(--heading-font);
+        font-weight: bold;
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+      .tile:nth-child(9) { background: #FFA07A; }
+
+      .tile:hover { transform: scale(1.05); }
+
+      /* Correct flip animation */
+      .tile.correct-flip {
+        transform: rotateY(180deg) scale(0.9);
+        background: var(--tile-flash) !important;
+        color: #333 !important;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+      }
+
+      /* Wrong tap flash */
+      .tile.wrong-flash {
+        background: rgba(255, 107, 157, 0.6) !important;
+        transform: scale(0.9);
+      }
+
+      /* OVERLAYS */
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 64px;
+        background: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: bold;
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+        font-size: 18px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        background: linear-gradient(45deg, var(--accent), #45f5ff);
+        color: #000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer">
+      <div id="header">NUMBER ORDER TAP</div>
+
+      <div id="hud">
+        <div class="hud-item">Level: <span id="levelDisplay">1</span></div>
+        <div class="hud-item">Next: <span id="targetDisplay">1</span></div>
+        <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
+        <div class="hud-item">Hits: <span id="hitsDisplay">0</span></div>
+        <div class="hud-item">Misses: <span id="missesDisplay">0</span></div>
+      </div>
+
+      <div id="grid"></div>
+
+      <div id="countdownOverlay">3</div>
+
+      <div id="winOverlay">
+        <div id="winText"></div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /*===========================
+   CONFIG
+===========================*/
+      const LEVELS = [
+        { rows: 3, cols: 3 },
+        { rows: 3, cols: 4 },
+      ];
+      const ROUNDS_PER_LEVEL = 2;
+
+      /*===========================
+   DOM ELEMENTS
+===========================*/
+      const grid = document.getElementById("grid");
+      const countdownEl = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+      const nextBtn = document.getElementById("nextLevelBtn");
+
+      const levelDisplay = document.getElementById("levelDisplay");
+      const targetDisplay = document.getElementById("targetDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+
+      /*===========================
+   STATE
+===========================*/
+      let currentLevel = 0;
+      let currentRound = 0;
+      let hits = 0,
+        misses = 0,
+        score = 0;
+
+      let tiles = [];
+      let tileValues = [];
+      let nextNumber = 1;
+      let locked = false;
+
+      /* UTILITIES */
+      const rand = (min, max) =>
+        Math.floor(Math.random() * (max - min + 1)) + min;
+      const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+      /*===========================
+  COUNTDOWN
+===========================*/
+      function showCountdown(sec) {
+        return new Promise((resolve) => {
+          countdownEl.style.opacity = 1;
+          countdownEl.textContent = sec;
+
+          let c = sec;
+          const iv = setInterval(() => {
+            c--;
+            if (c > 0) countdownEl.textContent = c;
+            else {
+              clearInterval(iv);
+              countdownEl.style.opacity = 0;
+              resolve();
+            }
+          }, 1000);
+        });
+      }
+
+      /*===========================
+  BUILD GRID
+===========================*/
+      function buildGrid() {
+        grid.innerHTML = "";
+        tiles = [];
+
+        const cfg = LEVELS[currentLevel];
+        grid.style.gridTemplateRows = `repeat(${cfg.rows}, 1fr)`;
+        grid.style.gridTemplateColumns = `repeat(${cfg.cols}, 1fr)`;
+
+        for (let i = 0; i < cfg.rows * cfg.cols; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.dataset.index = i;
+          t.addEventListener("click", () => tileClicked(i));
+          grid.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      /*===========================
+  GENERATE TILES
+===========================*/
+      function generateTiles() {
+        const cfg = LEVELS[currentLevel];
+        const total = cfg.rows * cfg.cols;
+
+        let numbers = [];
+        while (numbers.length < total) {
+          const n = rand(1, 100);
+          if (!numbers.includes(n)) numbers.push(n);
+        }
+
+        numbers.sort((a, b) => a - b); // Correct number order
+
+        tileValues = [];
+        const positions = [...Array(total).keys()];
+        shuffle(positions);
+
+        for (let i = 0; i < total; i++) {
+          tileValues.push({
+            index: positions[i],
+            val: numbers[i],
+            clicked: false,
+          });
+        }
+
+        tileValues.forEach((v) => {
+          const t = tiles[v.index];
+          t.textContent = v.val;
+          t.dataset.val = v.val;
+          t.dataset.clicked = "0";
+          t.classList.remove("correct-flip", "wrong-flash");
+        });
+
+        nextNumber = 1;
+        updateHUD();
+      }
+
+      /*===========================
+  TILE CLICK HANDLER
+===========================*/
+      function tileClicked(i) {
+        if (locked) return;
+
+        const t = tiles[i];
+        if (t.dataset.clicked === "1") return;
+
+        const val = Number(t.dataset.val);
+        const expected = tileValues[nextNumber - 1].val;
+
+        if (val === expected) {
+          hits++;
+          score += 10;
+          t.dataset.clicked = "1";
+          t.classList.add("correct-flip");
+
+          nextNumber++;
+        } else {
+          misses++;
+          score = Math.max(0, score - 2);
+          t.classList.add("wrong-flash");
+          setTimeout(() => t.classList.remove("wrong-flash"), 250);
+        }
+
+        updateHUD();
+
+        if (nextNumber > tileValues.length) {
+          setTimeout(() => nextCycle(), 500);
+        }
+      }
+
+      /*===========================
+  UPDATE HUD
+===========================*/
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+        targetDisplay.textContent =
+          nextNumber <= tileValues.length ? nextNumber : "-";
+      }
+
+      /*===========================
+  GAME LOOP
+===========================*/
+      function nextCycle() {
+        currentRound++;
+        if (currentRound > ROUNDS_PER_LEVEL) return endLevel();
+        generateTiles();
+      }
+
+      /*===========================
+  START LEVEL
+===========================*/
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+        hits = 0;
+        misses = 0;
+        score = 0;
+        currentRound = 0;
+        locked = false;
+
+        updateHUD();
+        buildGrid();
+
+        levelDisplay.textContent = currentLevel + 1;
+        showCountdown(3).then(() => nextCycle());
+      }
+
+      /*===========================
+  END LEVEL
+===========================*/
+      function endLevel() {
+        locked = true;
+
+        /* ===== SAVE RESULT TO LOCAL STORAGE ===== */
+        let saved = JSON.parse(localStorage.getItem("number_order_tap")) || [];
+
+        saved[currentLevel] = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        localStorage.setItem("number_order_tap", JSON.stringify(saved));
+
+        /* ===== SHOW LEVEL COMPLETE OVERLAY ===== */
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits: ${hits}, Misses: ${misses}, Score: ${score}`;
+
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      /* NEXT LEVEL BUTTON */
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+
+        if (currentLevel < LEVELS.length - 1) startLevel(currentLevel + 1);
+        else window.location.href = "home_page.html";
+      });
+
+      /* START GAME */
+      startLevel(0);
+    </script>
+  </body>
+</html>

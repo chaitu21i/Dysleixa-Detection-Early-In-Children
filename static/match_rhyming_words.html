@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match the Rhyming Words</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0f1530;
+      color: #eaf4ff;
+      font-family: 'Fredoka One', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      color: #6d6bff;
+      margin-top: 32px;
+    }
+    .description {
+      margin: 16px 0;
+      font-size: 1.2em;
+      max-width: 600px;
+      text-align: center;
+    }
+    .game-board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-top: 32px;
+      justify-content: center;
+    }
+    .card {
+      background: #1b1f32;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #0003;
+      width: 160px;
+      height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, opacity 0.3s;
+      position: relative;
+    }
+    .card.selected {
+      box-shadow: 0 0 0 4px #45f5ff;
+    }
+    .card.matched {
+      opacity: 0;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+    .card img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+    .card .word {
+      font-size: 1.3em;
+      color: #ff9900;
+      margin-bottom: 8px;
+    }
+    .card .audio-btn {
+      background: #45f5ff;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .card .audio-btn:hover {
+      background: #6d6bff;
+    }
+    .match-status {
+      margin-top: 24px;
+      font-size: 1.2em;
+      color: #ff9900;
+    }
+    .reset-btn {
+      margin-top: 32px;
+      padding: 12px 32px;
+      font-size: 1em;
+      background: #6d6bff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .reset-btn:hover {
+      background: #45f5ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Match the Rhyming Words</h1>
+  <!-- reminder: open this page via http://localhost:8000/static/match_rhyming_words.html or in the hub iframe. file:// URLs often disable scripts -->
+  <div id="levelHud" style="margin:16px 0; font-weight:700; color:#ffdd99;">Level: <span id="levelDisplay">1</span></div>
+  <div id="debugInfo" style="margin:8px 0; color:#ff8; font-size:0.9em;">Cards: <span id="cardCount">0</span></div>
+  <div class="game-board" id="gameBoard"></div>
+  <div class="match-status" id="matchStatus"></div>
+  <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+  <script>
+    // Word pairs with emoji fallbacks for reliability
+    const rhymingPairs = [
+      { word1: 'cat', emoji1: '🐱', word2: 'hat', emoji2: '🎩' },
+      { word1: 'dog', emoji1: '🐶', word2: 'log', emoji2: '🪵' },
+      { word1: 'sun', emoji1: '☀️', word2: 'bun', emoji2: '🍞' },
+      { word1: 'pen', emoji1: '🖊️', word2: 'hen', emoji2: '🐔' },
+      { word1: 'pig', emoji1: '🐷', word2: 'wig', emoji2: '💇' }
+    ];
+
+    let selectedCards = [];
+    let matchedPairIds = new Set();
+    let isProcessing = false;
+    let nextCardId = 0;
+
+    // Level configuration: show 3 pairs, then 4 pairs, then all 5 pairs
+    const LEVELS = [3,4,5];
+    let currentLevelIndex = 0; // 0 -> level 1 (3 pairs)
+    
+    console.log('[MRW] Script loaded. rhymingPairs=', rhymingPairs);
+    console.log('[MRW] LEVELS=', LEVELS);
+    console.log('[MRW] currentLevelIndex=', currentLevelIndex);
+
+    function speakWord(word) {
+      const utter = new window.SpeechSynthesisUtterance(word);
+      utter.lang = 'en-US';
+      utter.rate = 0.9;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function renderGame() {
+      console.log('[MRW] renderGame called; currentLevelIndex=', currentLevelIndex);
+      console.log('[MRW] document.readyState=', document.readyState);
+      const gameBoard = document.getElementById('gameBoard');
+      if (!gameBoard) {
+        console.error('[MRW] gameBoard element missing');
+        return;
+      }
+      gameBoard.innerHTML = '';
+      let cards = [];
+      nextCardId = 0;
+      selectedCards = [];
+      matchedPairIds.clear();
+
+      const pairsToUse = LEVELS[currentLevelIndex];
+      console.log('[MRW] pairsToUse=', pairsToUse, 'LEVELS.length=', LEVELS.length);
+      console.log('[MRW] rhymingPairs.length=', rhymingPairs.length);
+      document.getElementById('levelDisplay').textContent = currentLevelIndex + 1;
+
+      const activePairs = rhymingPairs.slice(0, pairsToUse);
+      console.log('[MRW] activePairs after slice=', activePairs);
+
+      activePairs.forEach((pair, idx) => {
+        cards.push({ word: pair.word1, emoji: pair.emoji1, pairIdx: idx, type: 'word1' });
+        cards.push({ word: pair.word2, emoji: pair.emoji2, pairIdx: idx, type: 'word2' });
+      });
+
+      // Shuffle cards
+      if (cards.length === 0) {
+        console.warn('[MRW] renderGame found zero cards to display (pairsToUse may be 0)');
+      }
+      cards = cards.sort(() => Math.random() - 0.5);
+
+      cards.forEach((card) => {
+        // track appended remote
+        const cardId = nextCardId++;
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        cardDiv.dataset.cardId = cardId;
+        cardDiv.dataset.pairIdx = card.pairIdx;
+        cardDiv.dataset.type = card.type;
+        cardDiv.onclick = () => selectCard(cardDiv);
+
+        const emojiDiv = document.createElement('div');
+        emojiDiv.style.fontSize = '60px';
+        emojiDiv.style.marginBottom = '12px';
+        emojiDiv.textContent = card.emoji;
+        cardDiv.appendChild(emojiDiv);
+
+        const wordDiv = document.createElement('div');
+        wordDiv.className = 'word';
+        wordDiv.textContent = card.word;
+        cardDiv.appendChild(wordDiv);
+
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'audio-btn';
+        audioBtn.innerHTML = '🔊';
+        audioBtn.onclick = (e) => { e.stopPropagation(); speakWord(card.word); };
+        cardDiv.appendChild(audioBtn);
+
+        gameBoard.appendChild(cardDiv);
+      });
+      console.log('[MRW] cards generated length=', cards.length);
+      const countEl = document.getElementById('cardCount');
+      if (countEl) countEl.textContent = cards.length;
+      
+      // end of rendering loop
+    }
+
+    function selectCard(cardDiv) {
+      const cardId = parseInt(cardDiv.dataset.cardId);
+
+      // Prevent selection if already processing or card is already matched
+      if (isProcessing || matchedPairIds.has(cardId)) {
+        return;
+      }
+
+      // Prevent selecting the same card twice
+      if (selectedCards.some(card => parseInt(card.dataset.cardId) === cardId)) {
+        return;
+      }
+
+      // Prevent selecting more than 2 cards
+      if (selectedCards.length >= 2) {
+        return;
+      }
+
+      selectedCards.push(cardDiv);
+      cardDiv.classList.add('selected');
+
+      if (selectedCards.length === 2) {
+        isProcessing = true;
+        const cardA = selectedCards[0];
+        const cardB = selectedCards[1];
+
+        const pairIdxA = cardA.dataset.pairIdx;
+        const typeA = cardA.dataset.type;
+        const pairIdxB = cardB.dataset.pairIdx;
+        const typeB = cardB.dataset.type;
+
+        if (pairIdxA === pairIdxB && typeA !== typeB) {
+          // Correct match!
+          document.getElementById('matchStatus').textContent = 'Great! You matched a rhyming pair! 🎉';
+          setTimeout(() => {
+            matchedPairIds.add(parseInt(cardA.dataset.cardId));
+            matchedPairIds.add(parseInt(cardB.dataset.cardId));
+            cardA.classList.add('matched');
+            cardB.classList.add('matched');
+            selectedCards = [];
+            isProcessing = false;
+
+            // Check if current level is complete
+            const pairsInLevel = LEVELS[currentLevelIndex];
+            if (matchedPairIds.size === pairsInLevel * 2) {
+              // Save level completion to localStorage
+              const levelResult = {
+                level: currentLevelIndex + 1,
+                hits: pairsInLevel,
+                misses: 0,
+                score: pairsInLevel * 100
+              };
+              
+              let saved = JSON.parse(localStorage.getItem('match_rhyming_words')) || [];
+              saved[currentLevelIndex] = levelResult;
+              localStorage.setItem('match_rhyming_words', JSON.stringify(saved));
+              console.log('✅ Level', currentLevelIndex + 1, 'saved to localStorage');
+              
+              if (currentLevelIndex < LEVELS.length - 1) {
+                document.getElementById('matchStatus').textContent = `Level ${currentLevelIndex + 1} complete! Advancing...`;
+                // advance to next level after brief pause
+                setTimeout(() => {
+                  currentLevelIndex++;
+                  document.getElementById('matchStatus').textContent = '';
+                  renderGame();
+                }, 1000);
+              } else {
+                document.getElementById('matchStatus').textContent = 'Congratulations! You matched all rhyming pairs! 🏆';
+              }
+            } else {
+              document.getElementById('matchStatus').textContent = '';
+            }
+          }, 1200);
+        } else {
+          // Wrong match
+          document.getElementById('matchStatus').textContent = 'Try again! ❌';
+          setTimeout(() => {
+            cardA.classList.remove('selected');
+            cardB.classList.remove('selected');
+            selectedCards = [];
+            isProcessing = false;
+            document.getElementById('matchStatus').textContent = '';
+          }, 1200);
+        }
+      }
+    }
+
+    function resetGame() {
+      selectedCards = [];
+      matchedPairIds.clear();
+      isProcessing = false;
+      document.getElementById('matchStatus').textContent = '';
+      // Reset to level 1
+      currentLevelIndex = 0;
+      renderGame();
+    }
+
+    // Immediate render to ensure it runs before anything else
+    console.log('[MRW] About to call renderGame immediately');
+    renderGame();
+    console.log('[MRW] renderGame completed immediately');
+  </script>
+</body>
+</html>

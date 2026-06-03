@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Speed Tap — Reflex Burst</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --tile-bg: #FFD6E0;
+        --tile-active: #FFF4A3;
+        --tile-flash: #FFF;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        letter-spacing: 1px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        text-align: center;
+        font-size: 18px;
+        color: #2c2c2c;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        transition: background 0.2s;
+        user-select: none;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+      .tile:nth-child(9) { background: #FFA07A; }
+
+      .tile.active {
+        background: var(--tile-active) !important;
+        color: #333;
+      }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      .tile.tap-flash {
+        background-color: var(--tile-flash) !important;
+        color: #333;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--heading-font);
+        color: #FF6B9D;
+        font-size: 64px;
+        background: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 10;
+        font-weight: bold;
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="header">SPEED TAP — REFLEX BURST</div>
+      <div id="hud">
+        Level: <span id="levelDisplay">1</span> | Score:
+        <span id="scoreDisplay">0</span> | Hits:
+        <span id="hitsDisplay">0</span> | Misses:
+        <span id="missesDisplay">0</span>
+      </div>
+      <div id="grid"></div>
+      <div id="countdownOverlay">3</div>
+      <div id="winOverlay">
+        <div id="winText">Level Complete!</div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      const LEVELS = [
+        { rows: 3, cols: 3, speed: 1800, taps: 4 },
+        { rows: 4, cols: 4, speed: 1600, taps: 6 },
+        { rows: 5, cols: 5, speed: 1400, taps: 10 },
+      ];
+
+      let currentLevel = 0;
+      let grid = document.getElementById("grid");
+      let countdown = document.getElementById("countdownOverlay");
+      let winOverlay = document.getElementById("winOverlay");
+      let winText = document.getElementById("winText");
+      let nextBtn = document.getElementById("nextLevelBtn");
+      let levelDisplay = document.getElementById("levelDisplay");
+      let scoreDisplay = document.getElementById("scoreDisplay");
+      let hitsDisplay = document.getElementById("hitsDisplay");
+      let missesDisplay = document.getElementById("missesDisplay");
+
+      let tiles = [];
+      let activeTile = null;
+      let hits = 0;
+      let misses = 0;
+      let totalTaps = 0;
+      let score = 0;
+      let gameLog = [];
+      let lastActiveTime = 0;
+      let locked = false;
+
+      function buildGrid(level) {
+        grid.innerHTML = "";
+        tiles = [];
+        const { rows, cols } = level;
+        grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        const total = rows * cols;
+        for (let i = 0; i < total; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.dataset.index = i;
+          t.addEventListener("click", () => tileClicked(i));
+          grid.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+        hits = 0;
+        misses = 0;
+        totalTaps = 0;
+        score = 0;
+        gameLog = [];
+        activeTile = null;
+
+        levelDisplay.textContent = currentLevel + 1;
+        updateHUD();
+        buildGrid(LEVELS[currentLevel]);
+
+        showCountdown(3).then(() => runGame());
+      }
+
+      function showCountdown(sec) {
+        return new Promise((res) => {
+          countdown.style.opacity = 1;
+          let c = sec;
+          countdown.textContent = c;
+          let interval = setInterval(() => {
+            c--;
+            if (c > 0) countdown.textContent = c;
+            else {
+              clearInterval(interval);
+              countdown.style.opacity = 0;
+              res();
+            }
+          }, 1000);
+        });
+      }
+
+      function runGame() {
+        locked = false;
+        nextTile();
+      }
+
+      function nextTile() {
+        const { speed, taps } = LEVELS[currentLevel];
+
+        if (totalTaps >= taps) {
+          endLevel();
+          return;
+        }
+
+        // If last tile wasn't clicked → count as miss
+        if (activeTile !== null) {
+          tiles[activeTile].classList.remove("active");
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({
+            time: Date.now(),
+            action: "miss",
+            tile: activeTile,
+            rt: Date.now() - lastActiveTime,
+          });
+        }
+
+        const idx = Math.floor(Math.random() * tiles.length);
+        activeTile = idx;
+        tiles[idx].classList.add("active");
+        lastActiveTime = Date.now();
+        totalTaps++;
+
+        gameLog.push({ time: Date.now(), action: "show", tile: idx });
+        updateHUD();
+
+        setTimeout(nextTile, speed);
+      }
+
+      function tileClicked(idx) {
+        if (locked) return;
+
+        // Wrong tile
+        if (idx !== activeTile) {
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({ time: Date.now(), action: "wrong", tile: idx });
+          updateHUD();
+          return;
+        }
+
+        // Correct tile
+        const rt = Date.now() - lastActiveTime;
+        gameLog.push({ time: Date.now(), action: "hit", tile: idx, rt });
+
+        hits++;
+        score += 10;
+
+        // Flash effect
+        tiles[idx].classList.add("tap-flash");
+        setTimeout(() => tiles[idx].classList.remove("tap-flash"), 200);
+
+        // Important: prevent nextTile() from counting this as a miss
+        tiles[idx].classList.remove("active");
+        activeTile = null;
+
+        updateHUD();
+      }
+
+      function endLevel() {
+        locked = true;
+        if (activeTile !== null) tiles[activeTile].classList.remove("active");
+        activeTile = null;
+
+        // Load previous data or create empty array
+        let data = JSON.parse(localStorage.getItem("speed_tap")) || [];
+
+        // Save current level result
+        data[currentLevel] = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        // Store back
+        localStorage.setItem("speed_tap", JSON.stringify(data));
+
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits:${hits}, Misses:${misses}, Score:${score}`;
+
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+
+        if (currentLevel < LEVELS.length - 1) startLevel(currentLevel + 1);
+        else window.location.href = "home_page.html";
+      });
+
+      // Start game
+      startLevel(0);
+    </script>
+  </body>
+</html>

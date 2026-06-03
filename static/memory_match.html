@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Memory Match — Levels</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Gamified Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ------------------------------------------------------
+   GLOBAL STYLE + THEME
+------------------------------------------------------ */
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --card-bg: #B8F2E6;
+        --card-front: #FFD6E0;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        font-family: var(--font);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      /* HEADER */
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        letter-spacing: 1px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      /* GRID */
+      #grid {
+        display: grid;
+        gap: 14px;
+        width: 90vw;
+        height: 70vh;
+        max-width: 480px;
+        max-height: 480px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* CARD */
+      .card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: var(--card-front);
+        border-radius: 25px;
+        cursor: pointer;
+        transform-style: preserve-3d;
+        transition: transform 0.4s;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        user-select: none;
+        border: 4px solid rgba(255, 255, 255, 0.7);
+      }
+
+      .card-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        border-radius: 16px;
+        transform-style: preserve-3d;
+        transition: transform 0.5s;
+      }
+
+      .card.is-flipped .card-inner {
+        transform: rotateY(180deg);
+      }
+
+      .card-face {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 25px;
+        font-size: 42px;
+      }
+
+      .card-front {
+        background: var(--card-front);
+        color: #fff;
+      }
+
+      .card-back {
+        background: var(--card-bg);
+        transform: rotateY(180deg);
+        font-size: 46px;
+      }
+
+      /* LEVEL LABEL */
+      #levelLabel {
+        position: absolute;
+        bottom: 12px;
+        font-size: 22px;
+        letter-spacing: 2px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: bold;
+      }
+
+      /* COUNTDOWN */
+      #countdownOverlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 70px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: bold;
+        z-index: 99;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .count-anim {
+        animation: pop 0.6s ease-out;
+      }
+
+      @keyframes pop {
+        0% {
+          transform: scale(0.2);
+          opacity: 0;
+        }
+        40% {
+          transform: scale(1.4);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* WIN SCREEN */
+      #winScreen {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.98);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: bold;
+      }
+
+      .win-show {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      button {
+        margin-top: 22px;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border: none;
+        border-radius: 25px;
+        font-family: var(--heading-font);
+        font-size: 20px;
+        cursor: pointer;
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      button:hover {
+        transform: scale(1.08);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer">
+      <div id="header">MEMORY MATCH</div>
+
+      <div id="grid"></div>
+
+      <div id="levelLabel">Level 1</div>
+
+      <div id="countdownOverlay"></div>
+
+      <div id="winScreen">
+        <div id="winText">Level Complete!</div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ------------------------------------------------------
+   UNIVERSAL RESULT STORAGE
+------------------------------------------------------ */
+
+      function saveTaskResult(gameId, levelIndex, result) {
+        // Append to master list
+        let all = JSON.parse(localStorage.getItem("memory_match")) || [];
+        all.push(result);
+        localStorage.setItem("memory_match", JSON.stringify(all));
+      }
+
+      /* ------------------------------------------------------
+   GAME CONFIG
+------------------------------------------------------ */
+
+      const LEVELS = [
+        { rows: 3, cols: 2 },
+        { rows: 3, cols: 4 },
+        { rows: 4, cols: 4 },
+      ];
+
+      let currentLevel = 0;
+      const grid = document.getElementById("grid");
+      const countdownOverlay = document.getElementById("countdownOverlay");
+      const winScreen = document.getElementById("winScreen");
+      const winText = document.getElementById("winText");
+      const nextLevelBtn = document.getElementById("nextLevelBtn");
+      const levelLabel = document.getElementById("levelLabel");
+
+      const EMOJIS = [
+        "🐶",
+        "🐱",
+        "🐻",
+        "🐼",
+        "🦁",
+        "🐵",
+        "🐸",
+        "🐰",
+        "🦊",
+        "🐯",
+        "🐙",
+        "🦄",
+        "🦋",
+        "🐔",
+        "🍎",
+        "🍉",
+        "🍌",
+        "🍓",
+        "🍇",
+        "🌟",
+      ];
+
+      /* ------------------------------------------------------
+   METRIC COUNTERS
+------------------------------------------------------ */
+      let clicks = 0;
+      let hits = 0;
+      let misses = 0;
+
+      let firstCard = null;
+      let lock = false;
+      let matchedPairs = 0;
+
+      /* ------------------------------------------------------
+   START LEVEL
+------------------------------------------------------ */
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+
+        // Reset counters
+        clicks = 0;
+        hits = 0;
+        misses = 0;
+
+        levelLabel.textContent = `Level ${levelIndex + 1}`;
+        winScreen.classList.remove("win-show");
+        prepareLevel();
+
+        showCountdown(() => enableCards());
+      }
+
+      /* ------------------------------------------------------
+   BUILD CARD GRID
+------------------------------------------------------ */
+      function prepareLevel() {
+        const { rows, cols } = LEVELS[currentLevel];
+
+        grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        grid.innerHTML = "";
+
+        const totalCards = rows * cols;
+        const pairCount = totalCards / 2;
+
+        const selected = EMOJIS.slice(0, pairCount);
+        const cards = [...selected, ...selected].sort(
+          () => Math.random() - 0.5
+        );
+
+        matchedPairs = 0;
+        firstCard = null;
+        lock = false;
+
+        cards.forEach((symbol, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.symbol = symbol;
+          card.dataset.index = index;
+
+          const inner = document.createElement("div");
+          inner.className = "card-inner";
+
+          const front = document.createElement("div");
+          front.className = "card-face card-front";
+
+          const back = document.createElement("div");
+          back.className = "card-face card-back";
+          back.textContent = symbol;
+
+          inner.appendChild(front);
+          inner.appendChild(back);
+          card.appendChild(inner);
+          grid.appendChild(card);
+
+          card.addEventListener("click", () => onCardClick(card));
+        });
+      }
+
+      /* ------------------------------------------------------
+   COUNTDOWN
+------------------------------------------------------ */
+      function showCountdown(callback) {
+        const sequence = ["Game Starts In", "3", "2", "1", "GO!"];
+        let i = 0;
+
+        countdownOverlay.style.opacity = 1;
+
+        function next() {
+          countdownOverlay.textContent = sequence[i];
+          countdownOverlay.classList.add("count-anim");
+
+          setTimeout(
+            () => countdownOverlay.classList.remove("count-anim"),
+            600
+          );
+
+          if (i < sequence.length - 1) {
+            i++;
+            setTimeout(next, 900);
+          } else {
+            setTimeout(() => {
+              countdownOverlay.style.opacity = 0;
+              callback();
+            }, 600);
+          }
+        }
+
+        next();
+      }
+
+      /* ------------------------------------------------------
+   CARD CLICK + METRICS
+------------------------------------------------------ */
+      function onCardClick(card) {
+        if (lock || card.classList.contains("is-flipped")) return;
+
+        clicks++; // track clicks
+        card.classList.add("is-flipped");
+
+        if (!firstCard) {
+          firstCard = card;
+          return;
+        }
+
+        lock = true;
+
+        if (firstCard.dataset.symbol === card.dataset.symbol) {
+          hits++; // correct match
+          matchedPairs++;
+
+          setTimeout(() => {
+            lock = false;
+            firstCard = null;
+
+            if (
+              matchedPairs ===
+              (LEVELS[currentLevel].rows * LEVELS[currentLevel].cols) / 2
+            ) {
+              showWin();
+            }
+          }, 600);
+        } else {
+          misses++; // incorrect match
+
+          setTimeout(() => {
+            firstCard.classList.remove("is-flipped");
+            card.classList.remove("is-flipped");
+            firstCard = null;
+            lock = false;
+          }, 700);
+        }
+      }
+
+      /* ------------------------------------------------------
+   WIN SCREEN + SAVE RESULT
+------------------------------------------------------ */
+      function showWin() {
+        winText.textContent =
+          currentLevel === LEVELS.length - 1
+            ? "All Levels Completed!"
+            : "Level Complete!";
+
+        winScreen.classList.add("win-show");
+
+        // ------- SAVE RESULT FOR THIS LEVEL ------
+        saveTaskResult("memorymatch", currentLevel, {
+          clicks: clicks,
+          hits: hits,
+          misses: misses,
+        });
+      }
+
+      /* NEXT LEVEL */
+      nextLevelBtn.addEventListener("click", () => {
+        if (currentLevel < LEVELS.length - 1) {
+          startLevel(currentLevel + 1);
+        } else {
+          window.location.href = "home_page.html";
+        }
+      });
+
+      /* Enable/Disable cards */
+      function disableCards() {
+        [...document.querySelectorAll(".card")].forEach((c) =>
+          c.classList.add("no-touch")
+        );
+      }
+      function enableCards() {
+        [...document.querySelectorAll(".card")].forEach((c) =>
+          c.classList.remove("no-touch")
+        );
+      }
+
+      /* ------------------------------------------------------
+   START GAME
+------------------------------------------------------ */
+      startLevel(0);
+    </script>
+  </body>
+</html>

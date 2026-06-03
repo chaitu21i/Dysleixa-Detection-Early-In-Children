@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick Math Burst — Reflex Math</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFF4A3 100%);
+        --tile-bg: #FFD6E0;
+        --tile-flash: #FFF4A3;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        text-align: center;
+        font-size: 18px;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      #equationDisplay {
+        font-size: 24px;
+        color: #2c2c2c;
+        font-family: var(--heading-font);
+        font-weight: bold;
+      }
+
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        transition: background 0.15s, transform 0.15s;
+        font-family: var(--heading-font);
+        font-weight: bold;
+        color: #fff;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+      .tile:nth-child(9) { background: #FFA07A; }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      .tile.tap-flash {
+        background-color: var(--tile-flash) !important;
+        transform: scale(0.93);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.93); }
+        50% { transform: scale(1.1); }
+      }
+
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.95);
+        font-size: 64px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer">
+      <div id="header">QUICK MATH BURST — REFLEX MATH</div>
+
+      <div id="hud">
+        Level: <span id="levelDisplay">1</span> | Score:
+        <span id="scoreDisplay">0</span> | Hits:
+        <span id="hitsDisplay">0</span> | Misses:
+        <span id="missesDisplay">0</span> |
+        <span id="equationDisplay">?</span>
+      </div>
+
+      <div id="grid"></div>
+
+      <div id="countdownOverlay">3</div>
+
+      <div id="winOverlay">
+        <div id="winText"></div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ===========================
+   LEVEL SETTINGS
+=========================== */
+      const LEVELS = [
+        { rows: 3, cols: 3, speed: 4000, ops: ["+"] },
+        { rows: 4, cols: 4, speed: 4000, ops: ["+", "-", "×"] },
+        { rows: 5, cols: 5, speed: 4000, ops: ["+", "-", "×", "÷"] },
+      ];
+
+      /* ===========================
+   DOM ELEMENTS
+=========================== */
+      const grid = document.getElementById("grid");
+      const countdown = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+
+      const levelDisplay = document.getElementById("levelDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+      const equationDisplay = document.getElementById("equationDisplay");
+
+      const nextBtn = document.getElementById("nextLevelBtn");
+
+      /* ===========================
+   GAME STATE
+=========================== */
+      let currentLevel = 0;
+      let tiles = [];
+      let correctAnswer = null;
+
+      let hits = 0;
+      let misses = 0;
+      let score = 0;
+
+      let cycleCount = 0;
+      let cycleTimer = null;
+      let locked = false;
+
+      let gameLog = [];
+
+      const rand = (max) => Math.floor(Math.random() * max);
+
+      let answeredThisCycle = false;
+
+      /* ===========================
+    BUILD GRID
+=========================== */
+      function buildGrid(level) {
+        grid.innerHTML = "";
+        tiles = [];
+
+        grid.style.gridTemplateRows = `repeat(${level.rows}, 1fr)`;
+        grid.style.gridTemplateColumns = `repeat(${level.cols}, 1fr)`;
+
+        const total = level.rows * level.cols;
+
+        for (let i = 0; i < total; i++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          tile.addEventListener("click", () => tileClicked(i));
+          tiles.push(tile);
+          grid.appendChild(tile);
+        }
+      }
+
+      /* ===========================
+    START LEVEL
+=========================== */
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+
+        hits = 0;
+        misses = 0;
+        score = 0;
+        cycleCount = 0;
+        locked = false;
+        gameLog = [];
+
+        levelDisplay.textContent = currentLevel + 1;
+        updateHUD();
+
+        buildGrid(LEVELS[currentLevel]);
+        showCountdown().then(() => runGame());
+      }
+
+      /* ===========================
+    COUNTDOWN
+=========================== */
+      function showCountdown() {
+        return new Promise((resolve) => {
+          countdown.style.opacity = 1;
+          let c = 3;
+          countdown.textContent = c;
+
+          const timer = setInterval(() => {
+            c--;
+            countdown.textContent = c;
+            if (c === 0) {
+              clearInterval(timer);
+              countdown.style.opacity = 0;
+              resolve();
+            }
+          }, 900);
+        });
+      }
+
+      /* ===========================
+    GAME LOOP
+=========================== */
+      function runGame() {
+        nextProblem();
+      }
+
+      function nextProblem() {
+        const lvl = LEVELS[currentLevel];
+
+        if (cycleCount >= 2) {
+          return endLevel();
+        }
+
+        generateEquation();
+        fillTiles();
+
+        answeredThisCycle = false; // ← prevent multiple scoring
+
+        cycleCount++;
+
+        cycleTimer = setTimeout(nextProblem, lvl.speed);
+      }
+
+      /* ===========================
+    EQUATION GENERATOR
+=========================== */
+      function generateEquation() {
+        const lvl = LEVELS[currentLevel];
+        const ops = lvl.ops;
+
+        const op = ops[rand(ops.length)];
+
+        let a, b, ans;
+
+        if (op === "+") {
+          a = rand(10) + 1;
+          b = rand(10) + 1;
+          ans = a + b;
+        } else if (op === "-") {
+          a = rand(15) + 10;
+          b = rand(10);
+          ans = a - b;
+        } else if (op === "×") {
+          a = rand(10) + 1;
+          b = rand(10) + 1;
+          ans = a * b;
+        } else {
+          // division with whole number
+          b = rand(9) + 2;
+          let m = rand(9) + 1;
+          a = b * m;
+          ans = m;
+        }
+
+        correctAnswer = ans;
+
+        equationDisplay.textContent = `${a} ${op} ${b} = ?`;
+
+        gameLog.push({ eq: `${a}${op}${b}`, answer: ans });
+      }
+
+      /* ===========================
+    TILE FILLING
+=========================== */
+      function fillTiles() {
+        const correctIndex = rand(tiles.length);
+
+        tiles.forEach((tile, i) => {
+          if (i === correctIndex) {
+            tile.textContent = correctAnswer;
+          } else {
+            let wrong;
+            do {
+              wrong = correctAnswer + rand(11) - 5;
+            } while (wrong === correctAnswer || wrong < -20 || wrong > 200);
+            tile.textContent = wrong;
+          }
+        });
+      }
+
+      /* ===========================
+    TILE CLICK
+=========================== */
+      function tileClicked(index) {
+        if (locked || answeredThisCycle) return; // ← block repeat taps
+
+        const value = Number(tiles[index].textContent);
+
+        if (value === correctAnswer) {
+          answeredThisCycle = true; // ← lock scoring
+          hits++;
+          score += 10;
+
+          tiles[index].classList.add("tap-flash");
+          setTimeout(() => tiles[index].classList.remove("tap-flash"), 200);
+        } else {
+          misses++;
+          score = Math.max(0, score - 2);
+        }
+
+        updateHUD();
+      }
+
+      /* ===========================
+    HUD UPDATE
+=========================== */
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      /* ===========================
+    END LEVEL
+=========================== */
+      function endLevel() {
+        locked = true;
+        clearTimeout(cycleTimer);
+
+        const result = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        let saved = JSON.parse(localStorage.getItem("math_burst")) || [];
+        saved[currentLevel] = result;
+        localStorage.setItem("math_burst", JSON.stringify(saved));
+
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits: ${hits}, Misses: ${misses}, Score: ${score}`;
+
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      /* ===========================
+    NEXT LEVEL
+=========================== */
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+
+        if (currentLevel < LEVELS.length - 1) startLevel(currentLevel + 1);
+        else window.location.href = "home_page.html";
+      });
+
+      /* ===========================
+    START GAME
+=========================== */
+      startLevel(0);
+    </script>
+  </body>
+</html>

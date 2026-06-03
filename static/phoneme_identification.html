@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🎵 Phoneme Sound Matching Game 🎵</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --color-1: #FF6B9D;
+      --color-2: #FFC75F;
+      --color-3: #6BCEBB;
+      --color-4: #845EC2;
+      --color-5: #00C9A7;
+      --good: #7FE98A;
+      --bad: #FF6B6B;
+      --shadow: 0 12px 35px rgba(0,0,0,0.15);
+      --light-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+    
+    *{box-sizing:border-box}
+    
+    body{
+      margin:0;
+      padding:0;
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(135deg, #FF6B9D 0%, #FFC75F 25%, #6BCEBB 50%, #C78CFF 75%, #6BCEBB 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: #2c2c2c;
+      min-height: 100vh;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .wrap{
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .game{
+      width: 100%;
+      max-width: 900px;
+      background: linear-gradient(135deg, #FFFFFF 0%, #F0F8FF 100%);
+      border-radius: 35px;
+      box-shadow: var(--shadow);
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      border: 5px solid #FFD700;
+    }
+    
+    /* TOP SECTION */
+    .top{
+      text-align: center;
+      animation: bounceIn 0.8s ease-out;
+    }
+    
+    .title{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--color-1), var(--color-4), var(--color-5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      line-height: 1.2;
+    }
+    
+    .instr{
+      font-size: 20px;
+      color: #555;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    
+    /* HUD */
+    .hud{
+      display: flex;
+      justify-content: space-around;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    
+    .stat{
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      padding: 18px 28px;
+      border-radius: 20px;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: var(--light-shadow);
+      transform: scale(1);
+      transition: transform 0.2s;
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    
+    .stat:hover{
+      transform: scale(1.05);
+    }
+    
+    .stat span{
+      display: block;
+      font-size: 28px;
+      margin-top: 8px;
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    /* CENTER SECTION */
+    .center{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 35px;
+      padding: 20px 0;
+    }
+    
+    .roundInfo{
+      font-size: 22px;
+      color: #666;
+      font-weight: 600;
+      background: #FFF9E6;
+      padding: 12px 24px;
+      border-radius: 20px;
+      border: 3px dashed var(--color-2);
+    }
+    
+    .roundInfo strong{
+      color: var(--color-4);
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    .playBtn{
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      border: 6px solid var(--color-4);
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 15px 40px rgba(255, 107, 157, 0.35);
+      transition: all 0.2s;
+      font-family: 'Fredoka One', sans-serif;
+      position: relative;
+    }
+    
+    .playBtn:hover{
+      transform: scale(1.08);
+      box-shadow: 0 20px 50px rgba(255, 107, 157, 0.45);
+    }
+    
+    .playBtn:active{
+      transform: scale(0.95);
+    }
+    
+    .playBtn svg{
+      width: 50px;
+      height: 50px;
+      margin-bottom: 8px;
+    }
+    
+    .playBtn::after{
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      border: 6px solid var(--color-4);
+      transform: translate(-50%, -50%);
+      animation: pulse-ring 1.5s infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes pulse-ring {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+      }
+    }
+    
+    /* OPTIONS */
+    .options{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    .opt{
+      min-width: 160px;
+      padding: 24px 30px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+      border: 4px solid var(--color-3);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--color-4);
+      transition: all 0.15s;
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--light-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .opt::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      transition: left 0.3s;
+    }
+    
+    .opt:hover{
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .opt:hover::before{
+      left: 100%;
+    }
+    
+    .opt.small{
+      min-width: 140px;
+      padding: 20px 24px;
+      font-size: 24px;
+    }
+    
+    .opt.medium{
+      min-width: 150px;
+      padding: 22px 28px;
+      font-size: 26px;
+    }
+    
+    .opt.correct{
+      border-color: var(--good);
+      background: linear-gradient(135deg, #E8F8E8, #F0FFF0);
+      color: #22B14C;
+      animation: correctPulse 0.6s ease-out;
+      box-shadow: 0 15px 35px rgba(127, 233, 138, 0.35);
+    }
+    
+    .opt.wrong{
+      border-color: var(--bad);
+      background: linear-gradient(135deg, #FFE8E8, #FFF0F0);
+      color: var(--bad);
+      animation: wrongShake 0.5s ease-out;
+      box-shadow: 0 15px 35px rgba(255, 107, 107, 0.35);
+    }
+    
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* FOOTER */
+    .footer{
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 15px 0;
+    }
+    
+    .timer{
+      font-weight: 700;
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--color-2), var(--color-1));
+      color: white;
+      padding: 12px 20px;
+      border-radius: 15px;
+      box-shadow: var(--light-shadow);
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    .reaction{
+      font-weight: 700;
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--color-4), var(--color-5));
+      color: white;
+      padding: 12px 20px;
+      border-radius: 15px;
+      box-shadow: var(--light-shadow);
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    /* END SCREEN */
+    .end{
+      padding: 40px 30px;
+      text-align: center;
+      animation: zoomIn 0.6s ease-out;
+    }
+    
+    @keyframes zoomIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    .big{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--color-1), var(--color-4), var(--color-5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 20px 0;
+    }
+    
+    .summary{
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 30px 0;
+    }
+    
+    .cardSmall{
+      background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+      border-radius: 20px;
+      padding: 25px 30px;
+      box-shadow: var(--light-shadow);
+      border: 3px solid var(--color-3);
+      flex: 1;
+      min-width: 140px;
+      max-width: 180px;
+    }
+    
+    .cardSmall strong{
+      display: block;
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 32px;
+      color: var(--color-4);
+      margin-top: 10px;
+    }
+    
+    .awareness-result{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 28px;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 15px;
+      border: 3px solid var(--color-5);
+    }
+    
+    .awareness-strong{
+      color: var(--good);
+      background: #E8F8E8;
+    }
+    
+    .awareness-moderate{
+      color: var(--color-2);
+      background: #FFF9E6;
+    }
+    
+    .awareness-weak{
+      color: var(--bad);
+      background: #FFE8E8;
+    }
+    
+    .restart{
+      padding: 16px 36px;
+      border-radius: 20px;
+      border: none;
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      color: white;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--light-shadow);
+      margin-top: 25px;
+      transition: all 0.2s;
+    }
+    
+    .restart:hover{
+      transform: scale(1.08);
+      box-shadow: 0 15px 35px rgba(255, 107, 157, 0.35);
+    }
+    
+    .restart:active{
+      transform: scale(0.95);
+    }
+
+    /* RESET BUTTON */
+    .resetBtn{
+      padding: 12px 20px;
+      border-radius: 15px;
+      border: none;
+      background: linear-gradient(135deg, var(--color-2), var(--color-1));
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--light-shadow);
+      transition: all 0.2s;
+      min-width: 120px;
+    }
+
+    .resetBtn:hover{
+      transform: scale(1.08);
+      box-shadow: 0 10px 30px rgba(255, 107, 157, 0.35);
+    }
+
+    .resetBtn:active{
+      transform: scale(0.95);
+    }
+
+    /* LEVEL COMPLETION SCREEN */
+    .levelCompletionScreen{
+      display: none;
+      text-align: center;
+      padding: 40px 30px;
+      animation: zoomIn 0.6s ease-out;
+    }
+
+    .completionMessage{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--color-1);
+      margin: 20px 0;
+      animation: bounce 1s ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .levelScore{
+      font-size: 24px;
+      color: #555;
+      margin: 25px 0;
+      font-weight: 600;
+    }
+
+    .levelScore strong{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 36px;
+      color: var(--color-4);
+      display: block;
+      margin: 10px 0;
+    }
+
+    .nextLevelBtn{
+      padding: 18px 40px;
+      border-radius: 25px;
+      border: none;
+      background: linear-gradient(135deg, var(--color-3), var(--color-5));
+      color: white;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--shadow);
+      margin-top: 30px;
+      transition: all 0.3s;
+      min-width: 250px;
+    }
+
+    .nextLevelBtn:hover{
+      transform: scale(1.08);
+      box-shadow: 0 20px 50px rgba(132, 94, 194, 0.4);
+    }
+
+    .nextLevelBtn:active{
+      transform: scale(0.95);
+    }
+    
+    /* RESPONSIVE */
+
+    @media(max-width: 768px){
+      .game{
+        padding: 30px 20px;
+        gap: 25px;
+        border-radius: 25px;
+      }
+      
+      .title{
+        font-size: 38px;
+      }
+      
+      .playBtn{
+        width: 150px;
+        height: 150px;
+        font-size: 14px;
+      }
+      
+      .opt{
+        min-width: 140px;
+        padding: 20px 24px;
+        font-size: 24px;
+      }
+      
+      .opt.small{
+        min-width: 125px;
+        padding: 16px 20px;
+        font-size: 20px;
+      }
+      
+      .hud{
+        gap: 10px;
+      }
+      
+      .stat{
+        padding: 14px 20px;
+        font-size: 16px;
+        min-width: 100px;
+      }
+      
+      .stat span{
+        font-size: 22px;
+      }
+    }
+    
+    @media(max-width: 480px){
+      .wrap{
+        padding: 15px;
+      }
+      
+      .game{
+        padding: 20px 15px;
+        gap: 20px;
+        border-radius: 20px;
+      }
+      
+      .title{
+        font-size: 28px;
+      }
+      
+      .instr{
+        font-size: 16px;
+      }
+      
+      .playBtn{
+        width: 130px;
+        height: 130px;
+        font-size: 12px;
+      }
+      
+      .opt{
+        min-width: 110px;
+        padding: 16px 18px;
+        font-size: 20px;
+      }
+      
+      .roundInfo{
+        font-size: 16px;
+      }
+      
+      .big{
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="game" role="application">
+      <div class="top">
+        <div class="title">🎵 Phoneme Sound Matching 🎵</div>
+        <div class="instr">👂 Listen to the sound and tap the correct phoneme!</div>
+        <div class="hud">
+          <div class="stat">⭐ Score<br/><span id="score">0</span></div>
+          <div class="stat">❌ Errors<br/><span id="errors">0</span></div>
+          <div class="stat">🎮 Round<br/><span id="round">0</span></div>
+          <button id="resetBtn" class="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="center">
+        <div class="roundInfo">📚 Level: <strong id="levelName">1 - Single Phonemes</strong>&nbsp;&nbsp;|&nbsp;&nbsp;<span id="roundInfo">Round 0 / 0</span></div>
+        
+        <button id="play" class="playBtn" aria-label="Play sound">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3v18l15-9L5 3z" fill="currentColor"/></svg>
+          <div>Play Sound</div>
+        </button>
+
+        <div class="options" id="options"></div>
+
+        <div class="footer">
+          <div class="timer">⏱️ Time: <span id="timer">0.0</span>s</div>
+          <div class="reaction">⚡ Reaction: <span id="lastRT">—</span></div>
+        </div>
+      </div>
+
+      <div id="endScreen" style="display:none" class="end">
+        <div class="big">🎉 You Did It! 🎉</div>
+        <div class="summary">
+          <div class="cardSmall">⭐ Total Score<br/><strong id="resScore">0</strong></div>
+          <div class="cardSmall">❌ Total Errors<br/><strong id="resErrors">0</strong></div>
+          <div class="cardSmall">⚡ Avg Time<br/><strong id="resAvgRT">0</strong> ms</div>
+        </div>
+        <div class="awareness-result" id="resLevel">—</div>
+        <button id="restart" class="restart">🔄 Play Again!</button>
+      </div>
+
+      <div id="levelCompletionScreen" style="display:none" class="levelCompletionScreen">
+        <div class="completionMessage" id="completionMsg">🎉 Level 1 Completed! 🎉</div>
+        <div class="levelScore">
+          Correct Answers
+          <strong id="levelCorrect">0</strong>
+        </div>
+        <div class="levelScore">
+          Score
+          <strong id="levelScore" style="color: var(--color-3);">0</strong>
+        </div>
+        <button id="nextLevelBtn" class="nextLevelBtn">Next Level →</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Game data per level - UPDATED WITH 3 LEVELS AS PER REQUIREMENTS
+const LEVELS = [
+  { id:1, name:'Basic Phonemes', items:['ba','da','pa','ga'], rounds:5, btnSize:'large', hasTimer:false },
+  { id:2, name:'Blended Sounds', items:['bla','gra','sta','pla'], rounds:6, btnSize:'medium', hasTimer:false },
+  { id:3, name:'Simple Words', items:['bat','cat','dog','pen'], rounds:8, btnSize:'small', hasTimer:true }
+];
+
+let levelIndex = 0;
+let roundNum = 0;
+let score = 0, errors = 0;
+let levelScore = 0, levelCorrect = 0;  // Score for current level only
+let totalScore = 0, totalErrors = 0;  // Score across all levels
+let playTimestamp = null;
+let roundStartTimestamp = null;
+let reactionTimes = [];
+let timerInterval = null;
+let timeLeft = 5.0;
+let currentCorrect = null;
+
+const scoreEl = document.getElementById('score');
+const errorsEl = document.getElementById('errors');
+const roundEl = document.getElementById('round');
+const levelNameEl = document.getElementById('levelName');
+const roundInfoEl = document.getElementById('roundInfo');
+const optionsEl = document.getElementById('options');
+const playBtn = document.getElementById('play');
+const timerEl = document.getElementById('timer');
+const lastRtEl = document.getElementById('lastRT');
+const endScreen = document.getElementById('endScreen');
+const resScore = document.getElementById('resScore');
+const resErrors = document.getElementById('resErrors');
+const resAvgRT = document.getElementById('resAvgRT');
+const resLevel = document.getElementById('resLevel');
+const restartBtn = document.getElementById('restart');
+
+// New elements for level completion
+const levelCompletionScreen = document.getElementById('levelCompletionScreen');
+const completionMsg = document.getElementById('completionMsg');
+const levelScoreEl = document.getElementById('levelScore');
+const levelCorrectEl = document.getElementById('levelCorrect');
+const nextLevelBtn = document.getElementById('nextLevelBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a }
+
+function formatMs(ms){ return Math.round(ms) }
+
+function startLevel(idx){
+  levelIndex=idx; 
+  roundNum=0; 
+  score=0;  // Reset level score only
+  errors=0;  // Reset level errors only
+  levelScore=0;
+  levelCorrect=0;
+  reactionTimes=[];
+  // Keep totalScore and totalErrors - they accumulate across levels
+  scoreEl.textContent=totalScore;  // Display cumulative score
+  errorsEl.textContent=errors;
+  roundEl.textContent='0';
+  levelNameEl.textContent=`${LEVELS[levelIndex].id} - ${LEVELS[levelIndex].name}`;
+  
+  // Hide all screens and show game center
+  levelCompletionScreen.style.display='none';
+  endScreen.style.display='none';
+  const centerSection = document.querySelector('.center');
+  centerSection.style.display='flex';
+  
+  // Manage timer visibility
+  const timerContainer = document.querySelector('.timer');
+  if(!LEVELS[levelIndex].hasTimer) {
+    timerContainer.style.display='none';
+  } else {
+    timerContainer.style.display='block';
+  }
+  
+  // Clear any running timers
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCorrect = null;
+  
+  nextRound();
+}
+
+function updateProgress(){
+  const totalRounds = LEVELS[levelIndex].rounds;
+  roundInfoEl.textContent = `Round ${Math.min(roundNum, totalRounds)} / ${totalRounds}`;
+}
+
+function buildOptions(correct){
+  const pool = LEVELS[levelIndex].items.slice();
+  const others = pool.filter(x=>x!==correct);
+  shuffle(others);
+  const opts = [correct, others[0] || '', others[1] || '', others[2] || ''].slice(0,4);
+  shuffle(opts);
+  return opts;
+}
+
+function renderOptions(opts){
+  optionsEl.innerHTML='';
+  const sizeClass = LEVELS[levelIndex].btnSize==='small' ? 'small' : (LEVELS[levelIndex].btnSize==='medium'?'medium':'');
+  opts.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = `opt ${sizeClass}`.trim();
+    b.textContent = opt;
+    b.onclick = ()=>onOptionClick(b,opt);
+    optionsEl.appendChild(b);
+  })
+}
+
+function playSound(text){
+  if(window.speechSynthesis){
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='en-US';
+    u.rate=0.9; u.pitch=1.0; u.volume=1.0;
+    u.onstart=()=>{ playTimestamp=performance.now(); }
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } else {
+    playTimestamp=performance.now();
+  }
+}
+
+function startTimer(){
+  // Only show timer for levels that have hasTimer flag
+  if(!LEVELS[levelIndex].hasTimer) {
+    roundStartTimestamp=performance.now();
+    return;
+  }
+  
+  clearInterval(timerInterval);
+  timeLeft=5.0;
+  timerEl.textContent=timeLeft.toFixed(1);
+  roundStartTimestamp=performance.now();
+  timerInterval=setInterval(()=>{
+    timeLeft-=0.1;
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      timerEl.textContent='0.0';
+      onTimeout();
+    } else {
+      timerEl.textContent=timeLeft.toFixed(1);
+    }
+  },100);
+}
+
+function onTimeout(){
+  errors++; 
+  totalErrors++;
+  errorsEl.textContent=errors;
+  lastRtEl.textContent='—';
+  clearInterval(timerInterval);
+  timerInterval = null;
+  setTimeout(()=>{ nextRound() },700);
+}
+
+function onOptionClick(button,opt){
+  if(!currentCorrect) return;
+  const clickTime=performance.now();
+  const rt=playTimestamp ? (clickTime-playTimestamp) : (clickTime-roundStartTimestamp);
+  lastRtEl.textContent=formatMs(rt);
+  reactionTimes.push(rt);
+
+  if(opt===currentCorrect){
+    score+=10; 
+    levelScore+=10;
+    totalScore+=10;  // Add to total immediately
+    levelCorrect++;
+    scoreEl.textContent=totalScore;  // Update display with total score
+    button.classList.add('correct');
+  } else {
+    errors+=1; 
+    totalErrors++;
+    errorsEl.textContent=errors;
+    button.classList.add('wrong');
+    Array.from(optionsEl.children).forEach(b=>{ if(b.textContent===currentCorrect) b.classList.add('correct') })
+  }
+  clearInterval(timerInterval);
+  currentCorrect=null;
+  setTimeout(()=>nextRound(),900);
+}
+
+function nextRound(){
+  const level=LEVELS[levelIndex];
+  const total=level.rounds;
+  roundNum++;
+  if(roundNum>total){
+    showLevelCompletion();
+    return;
+  }
+  roundEl.textContent=roundNum;
+  updateProgress();
+
+  const items=level.items;
+  const correct=items[Math.floor(Math.random()*items.length)];
+  currentCorrect=correct;
+  const opts=buildOptions(correct);
+  renderOptions(opts);
+
+  Array.from(optionsEl.children).forEach(b=>{ b.classList.remove('correct','wrong'); });
+
+  startTimer();
+  setTimeout(()=>{ playSound(correct); },120);
+}
+
+function showLevelCompletion(){
+  // Store this level's data - totalScore is already updated in onOptionClick
+  // so we don't add levelScore again here
+  
+  // Clear any running timers
+  clearInterval(timerInterval);
+  timerInterval = null;
+  currentCorrect = null;
+  
+  // Hide center section and show level completion screen
+  const centerSection = document.querySelector('.center');
+  centerSection.style.display='none';
+  levelCompletionScreen.style.display='block';
+  
+  completionMsg.textContent=`🎉 Level ${LEVELS[levelIndex].id} Completed! 🎉`;
+  levelCorrectEl.textContent=levelCorrect;
+  levelScoreEl.textContent=levelScore;
+  
+  // Check if this is the last level
+  if(levelIndex === LEVELS.length - 1){
+    // Last level complete - show final results after a delay
+    setTimeout(()=>{
+      showFinalResults();
+    }, 3000);
+  }
+}
+
+function showFinalResults(){
+  levelCompletionScreen.style.display='none';
+  const centerSection = document.querySelector('.center');
+  centerSection.style.display='none';
+  endScreen.style.display='block';
+  
+  const totalRounds = LEVELS.reduce((sum, level) => sum + level.rounds, 0);
+  const avgRT = reactionTimes.length ? Math.round(reactionTimes.reduce((a,b)=>a+b,0)/reactionTimes.length) : 0;
+  
+  resScore.textContent=totalScore;
+  resErrors.textContent=totalErrors;
+  resAvgRT.textContent=avgRT;
+  
+  const accuracy = totalRounds ? (totalScore / (totalRounds * 10)) : 0;  // totalScore is already in points (0-10 per round)
+  let resClass='awareness-weak';
+  let resText='Keep Practicing! 💪';
+  
+  if(accuracy >= 0.8){
+    resClass='awareness-strong';
+    resText='🌟 Excellent phoneme recognition! You\'re a Sound Star! 🌟';
+  } else if(accuracy >= 0.6){
+    resClass='awareness-moderate';
+    resText='👏 Good effort! Keep practicing to improve! 👏';
+  }
+  
+  resLevel.textContent=resText;
+  resLevel.className='awareness-result '+resClass;
+}
+
+function showResults(){
+  // This is kept for backward compatibility but is replaced by showLevelCompletion and showFinalResults
+}
+
+playBtn.addEventListener('click',()=>{
+  if(!currentCorrect) return;
+  playSound(currentCorrect);
+});
+
+nextLevelBtn.addEventListener('click',()=>{
+  if(levelIndex < LEVELS.length - 1){
+    levelCompletionScreen.style.display='none';
+    levelIndex++;
+    startLevel(levelIndex);
+  }
+});
+
+restartBtn.addEventListener('click',()=>{
+  levelCompletionScreen.style.display='none';
+  endScreen.style.display='none';
+  const centerSection = document.querySelector('.center');
+  centerSection.style.display='flex';
+  
+  levelIndex=0;
+  totalScore=0;
+  totalErrors=0;
+  reactionTimes=[];
+  startLevel(0);
+});
+
+resetBtn.addEventListener('click',()=>{
+  levelCompletionScreen.style.display='none';
+  endScreen.style.display='none';
+  const centerSection = document.querySelector('.center');
+  centerSection.style.display='flex';
+  
+  levelIndex=0;
+  totalScore=0;
+  totalErrors=0;
+  reactionTimes=[];
+  startLevel(0);
+});
+
+startLevel(0);
+
+</script>
+</body>
+</html>

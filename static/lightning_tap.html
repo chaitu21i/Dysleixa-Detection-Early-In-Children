@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lightning Tap</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --tile-bg: #FFD6E0;
+        --tile-lightning: #FFF4A3;
+        --tile-flash: #FFF;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        align-items: center;
+        color: #2c2c2c;
+        font-size: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      .hud-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+        user-select: none;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+      .tile:nth-child(9) { background: #FFA07A; }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      .tile.lightning {
+        background: var(--tile-lightning) !important;
+        color: #333;
+        box-shadow: 0 0 20px #FFD700, 0 0 30px #FFA500 inset;
+      }
+      
+      .tile.tap-flash {
+        background: var(--tile-flash) !important;
+        color: #333 !important;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        transform: scale(0.95);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.95); }
+        50% { transform: scale(1.1); }
+      }
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--heading-font);
+        color: #FF6B9D;
+        font-size: 64px;
+        background: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        font-weight: bold;
+      }
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+      @media (max-width: 420px) {
+        .tile {
+          font-size: 20px;
+        }
+        #header {
+          font-size: 20px;
+        }
+        #countdownOverlay,
+        #winOverlay {
+          font-size: 44px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="header">LIGHTNING TAP</div>
+      <div id="hud">
+        <div class="hud-item">Level: <span id="levelDisplay">1</span></div>
+        <div class="hud-item">Round: <span id="roundDisplay">1</span></div>
+        <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
+        <div class="hud-item">Hits: <span id="hitsDisplay">0</span></div>
+        <div class="hud-item">Misses: <span id="missesDisplay">0</span></div>
+        <div class="hud-item">Time: <span id="timeDisplay">0</span>s</div>
+      </div>
+      <div id="grid"></div>
+      <div id="countdownOverlay">3</div>
+      <div id="winOverlay">
+        <div id="winText"></div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ===== CONFIG ===== */
+      const LEVELS = [
+        { rows: 3, cols: 4, lightning: 4, roundTime: 7 },
+        { rows: 4, cols: 4, lightning: 6, roundTime: 6 },
+        { rows: 4, cols: 5, lightning: 8, roundTime: 5 },
+      ];
+      const ROUNDS_PER_LEVEL = 2;
+
+      /* ===== DOM ===== */
+      const grid = document.getElementById("grid");
+      const countdownEl = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+      const nextBtn = document.getElementById("nextLevelBtn");
+      const levelDisplay = document.getElementById("levelDisplay");
+      const roundDisplay = document.getElementById("roundDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+      const timeDisplay = document.getElementById("timeDisplay");
+
+      /* ===== STATE ===== */
+      let currentLevel = 0,
+        currentRound = 0,
+        hits = 0,
+        misses = 0,
+        score = 0;
+      let tiles = [],
+        lightningIndices = [],
+        roundTimer = null,
+        locked = false,
+        timeLeft = 0;
+
+      /* ===== COUNTDOWN ===== */
+      function showCountdown(sec) {
+        return new Promise((res) => {
+          countdownEl.style.opacity = 1;
+          countdownEl.textContent = sec;
+          let c = sec;
+          let iv = setInterval(() => {
+            c--;
+            if (c > 0) countdownEl.textContent = c;
+            else {
+              clearInterval(iv);
+              countdownEl.style.opacity = 0;
+              res();
+            }
+          }, 1000);
+        });
+      }
+
+      /* ===== BUILD GRID ===== */
+      function buildGrid() {
+        grid.innerHTML = "";
+        tiles = [];
+        const cfg = LEVELS[currentLevel];
+        grid.style.gridTemplateRows = `repeat(${cfg.rows},1fr)`;
+        grid.style.gridTemplateColumns = `repeat(${cfg.cols},1fr)`;
+        for (let i = 0; i < cfg.rows * cfg.cols; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.dataset.index = i;
+          t.addEventListener("click", () => tileClicked(i));
+          grid.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      /* ===== START ROUND ===== */
+      function finishRound() {
+        // Count remaining untapped lightning tiles
+        const remainingMisses = lightningIndices.filter(
+          (idx) => tiles[idx].dataset.clicked !== "1"
+        ).length;
+        misses += remainingMisses;
+        score = Math.max(0, score - remainingMisses * 2); // optional: penalty for untapped tiles
+        updateHUD();
+      }
+
+      function startRound() {
+        if (currentRound >= ROUNDS_PER_LEVEL) {
+          finishRound();
+          endLevel();
+          return;
+        }
+        currentRound++;
+        roundDisplay.textContent = currentRound;
+        const cfg = LEVELS[currentLevel];
+
+        // reset all tiles
+        tiles.forEach((t) => {
+          t.classList.remove("lightning", "tap-flash");
+          t.dataset.clicked = "0";
+        });
+
+        // assign lightning tiles
+        lightningIndices = [];
+        let indices = [...Array(tiles.length).keys()];
+        indices.sort(() => Math.random() - 0.5);
+        for (let i = 0; i < cfg.lightning; i++) {
+          const idx = indices[i];
+          tiles[idx].classList.add("lightning");
+          lightningIndices.push(idx);
+        }
+
+        // start timer
+        timeLeft = cfg.roundTime;
+        timeDisplay.textContent = timeLeft;
+        locked = false;
+        roundTimer = setInterval(() => {
+          timeLeft--;
+          timeDisplay.textContent = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(roundTimer);
+            finishRound(); // add untapped tiles as misses
+            startRound(); // next round
+          }
+        }, 1000);
+      }
+
+      /* ===== TILE CLICK ===== */
+      function tileClicked(i) {
+        if (locked) return;
+        const t = tiles[i];
+        if (t.dataset.clicked === "1") return;
+        t.dataset.clicked = "1";
+        if (t.classList.contains("lightning")) {
+          hits++;
+          score += 10;
+          t.classList.add("tap-flash");
+          // remove lightning after tap
+          t.classList.remove("lightning");
+        } else {
+          misses++;
+          score = Math.max(0, score - 2);
+          t.classList.add("tap-flash");
+        }
+        updateHUD();
+      }
+
+      /* ===== UPDATE HUD ===== */
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      /* ===== START LEVEL ===== */
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+        currentRound = 0;
+        hits = 0;
+        misses = 0;
+        score = 0;
+        updateHUD();
+        buildGrid();
+        showCountdown(3).then(() => startRound());
+        levelDisplay.textContent = currentLevel + 1;
+      }
+
+      /* ===== END LEVEL ===== */
+      function endLevel() {
+        locked = true;
+        clearInterval(roundTimer);
+        const result = { level: currentLevel + 1, hits, misses, score };
+        let saved = JSON.parse(localStorage.getItem("lightning_tap")) || [];
+        saved[currentLevel] = result;
+        localStorage.setItem("lightning_tap", JSON.stringify(saved));
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits:${hits}, Misses:${misses}, Score:${score}`;
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+      }
+
+      /* ===== NEXT LEVEL ===== */
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+        if (currentLevel < LEVELS.length - 1) startLevel(currentLevel + 1);
+        else window.location.href = "home_page.html";
+      });
+
+      /* ===== START GAME ===== */
+      startLevel(0);
+    </script>
+  </body>
+</html>

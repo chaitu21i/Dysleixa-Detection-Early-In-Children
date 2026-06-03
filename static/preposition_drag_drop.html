@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang=" en\>
+<head>
+ <meta charset=\UTF-8\>
+ <meta name=\viewport\ content=\width=device-width initial-scale=1.0\>
+ <title>Preposition Matching Game</title>
+ <style>
+ body {
+ background: #f7ca88; /* Warm wood-like background */
+ font-family: 'Comic Sans MS', cursive, sans-serif;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ min-height: 100vh;
+ margin: 0;
+ }
+
+ .game-board {
+ width: 90%;
+ max-width: 800px;
+ background: #e9b97b;
+ padding: 30px;
+ border-radius: 15px;
+ box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+ border: 8px solid #9d6b41;
+ }
+
+ .drop-container {
+ display: flex;
+ justify-content: space-between;
+ margin-bottom: 40px;
+ }
+
+ .column {
+ display: flex;
+ flex-direction: column;
+ gap: 5px;
+ }
+
+ .image-box {
+ width: 160px;
+ height: 160px;
+ background: white;
+ border-radius: 10px 10px 0 0;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ overflow: hidden;
+ }
+
+ .image-box img {
+ width: 80%;
+ height: auto;
+ }
+
+ .drop-zone {
+ width: 160px;
+ height: 100px;
+ background: rgba(255, 255, 255, 0.3);
+ border: 3px dashed #9d6b41;
+ border-top: none;
+ border-radius: 0 0 10px 10px;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ transition: background 0.3s;
+ }
+
+ .drop-zone.hovered {
+ background: rgba(255, 255, 255, 0.6);
+ }
+
+ .card-pile {
+ display: flex;
+ justify-content: center;
+ gap: 20px;
+ padding-top: 20px;
+ border-top: 2px solid #9d6b41;
+ }
+
+ .card {
+ width: 140px;
+ height: 90px;
+ background: white;
+ color: #3b2075;
+ font-size: 32px;
+ font-weight: bold;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ border-radius: 10px;
+ cursor: grab;
+ box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+ user-select: none;
+ }
+
+ .card:active { cursor: grabbing; }
+ .card.dragging { opacity: 0.4; }
+ </style>
+</head>
+<body>
+
+<div class=\game-board\>
+ <!-- Top Row: Images and Drop Targets -->
+ <div class=\drop-container\>
+ <div class=\column\>
+ <div class=\image-box\><img src=\https://img.icons8.com\ alt=\Under\></div>
+ <div class=\drop-zone\ data-target=\under\></div>
+ </div>
+ <div class=\column\>
+ <div class=\image-box\><img src=\https://img.icons8.com\ alt=\In\></div>
+ <div class=\drop-zone\ data-target=\in\></div>
+ </div>
+ <div class=\column\>
+ <div class=\image-box\><img src=\https://img.icons8.com\ alt=\By\></div>
+ <div class=\drop-zone\ data-target=\by\></div>
+ </div>
+ <div class=\column\>
+ <div class=\image-box\><img src=\https://img.icons8.com\ alt=\On\></div>
+ <div class=\drop-zone\ data-target=\on\></div>
+ </div>
+ </div>
+
+ <!-- Bottom Row: Draggable Cards -->
+ <div class=\card-pile\ id=\card-pile\>
+ <div class=\card\ draggable=\true\ id=\by\>by</div>
+ <div class=\card\ draggable=\true\ id=\in\>in</div>
+ <div class=\card\ draggable=\true\ id=\under\>under</div>
+ <div class=\card\ draggable=\true\ id=\on\>on</div>
+ </div>
+</div>
+
+<script>
+ const cards = document.querySelectorAll('.card');
+ const zones = document.querySelectorAll('.drop-zone');
+
+ cards.forEach(card => {
+ card.addEventListener('dragstart', (e) => {
+ e.dataTransfer.setData('text/plain', e.target.id);
+ setTimeout(() => e.target.classList.add('dragging'), 0);
+ });
+
+ card.addEventListener('dragend', (e) => {
+ e.target.classList.remove('dragging');
+ });
+ });
+
+ zones.forEach(zone => {
+ zone.addEventListener('dragover', (e) => {
+ e.preventDefault();
+ zone.classList.add('hovered');
+ });
+
+ zone.addEventListener('dragleave', () => {
+ zone.classList.remove('hovered');
+ });
+
+ zone.addEventListener('drop', (e) => {
+ e.preventDefault();
+ zone.classList.remove('hovered');
+ 
+ const cardId = e.dataTransfer.getData('text/plain');
+ const targetWord = zone.getAttribute('data-target');
+
+ if (cardId === targetWord) {
+ const droppedCard = document.getElementById(cardId);
+ zone.appendChild(droppedCard);
+ zone.style.border = none;
+ droppedCard.setAttribute('draggable', 'false');
+ droppedCard.style.cursor = default;
+ checkWin();
+ }
+ });
+ });
+
+ function checkWin() {
+ const remaining = document.getElementById('card-pile').children.length;
+ if (remaining === 0) {
+ setTimeout(() => alert(Great job! You matched them all!), 300);
+ }
+ }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+tensorflow==2.10
+numpy
+pillow
+python-multipart
+h5py
+sqlmodel
+passlib[bcrypt]
+python-jose[cryptography]
+opencv-python
+pytesseract
+langdetect

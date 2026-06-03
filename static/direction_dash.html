@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Direction Dash — Reflex Arrows</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #AEE6FF 0%, #B8F2E6 50%, #FFD6E0 100%);
+        --tile-bg: #FFD6E0;
+        --tile-active: #FFF4A3;
+        --tile-flash: #FFF;
+        --accent: #E4C1F9;
+        --accent2: #B8F2E6;
+        --font: 'Comic Neue', cursive;
+        --heading-font: "Fredoka One", cursive;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: #2c2c2c;
+        overflow: hidden;
+      }
+
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #header {
+        position: absolute;
+        top: 12px;
+        width: 100%;
+        text-align: center;
+        font-size: 28px;
+        color: #FF6B9D;
+        font-family: var(--heading-font);
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      #hud {
+        position: absolute;
+        top: 60px;
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        align-items: center;
+        color: #2c2c2c;
+        font-size: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .hud-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #targetDisplay {
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(255, 107, 157, 0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+      }
+
+      #targetArrow {
+        font-size: 28px;
+        filter: drop-shadow(0 0 6px rgba(255, 107, 157, 0.35));
+      }
+
+      #grid {
+        display: grid;
+        gap: 8px;
+        width: 90vw;
+        max-width: 480px;
+        height: 70vh;
+        max-height: 480px;
+      }
+
+      .tile {
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        transition: background 0.15s, transform 0.12s;
+        user-select: none;
+        color: #fff;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: 3px solid rgba(255,255,255,0.6);
+      }
+
+      .tile:nth-child(1) { background: #FFB6D9; }
+      .tile:nth-child(2) { background: #B6E5FF; }
+      .tile:nth-child(3) { background: #FFD9B6; }
+      .tile:nth-child(4) { background: #C9E4DE; }
+      .tile:nth-child(5) { background: #FFE4B5; }
+      .tile:nth-child(6) { background: #DDA0DD; }
+      .tile:nth-child(7) { background: #87CEEB; }
+      .tile:nth-child(8) { background: #F0E68C; }
+      .tile:nth-child(9) { background: #FFA07A; }
+
+      .tile:hover { transform: scale(1.05); }
+
+      .tile.cleared {
+        opacity: 0.25;
+        cursor: default;
+        color: rgba(0, 0, 0, 0.35);
+      }
+      .tile.tap-flash {
+        background: var(--tile-flash) !important;
+        color: #333 !important;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        transform: scale(0.96);
+        animation: bounce 0.3s ease;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: scale(0.96); }
+        50% { transform: scale(1.1); }
+      }
+
+      #countdownOverlay,
+      #winOverlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--heading-font);
+        color: #FF6B9D;
+        font-size: 64px;
+        background: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        z-index: 10;
+        font-weight: bold;
+      }
+
+      #winOverlay button {
+        margin-top: 20px;
+        padding: 16px 32px;
+        font-family: var(--heading-font);
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      #winOverlay button:hover {
+        transform: scale(1.08);
+      }
+
+      @media (max-width: 420px) {
+        .tile {
+          font-size: 28px;
+        }
+        #header {
+          font-size: 20px;
+        }
+        #countdownOverlay,
+        #winOverlay {
+          font-size: 44px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="header">DIRECTION DASH — REFLEX ARROWS</div>
+
+      <div id="hud">
+        <div class="hud-item">Level: <span id="levelDisplay">1</span></div>
+        <div class="hud-item" id="targetDisplay">
+          TARGET: <span id="targetArrow">→</span>
+          <span
+            id="targetName"
+            style="opacity: 0.9; font-size: 14px; margin-left: 6px"
+          ></span>
+        </div>
+        <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
+        <div class="hud-item">Hits: <span id="hitsDisplay">0</span></div>
+        <div class="hud-item">Misses: <span id="missesDisplay">0</span></div>
+      </div>
+
+      <div id="grid"></div>
+
+      <div id="countdownOverlay">3</div>
+
+      <div id="winOverlay">
+        <div id="winText">Level Complete!</div>
+        <button id="nextLevelBtn">Next Level</button>
+      </div>
+    </div>
+
+    <script>
+      /* ====== CONFIG / LEVELS ====== */
+      const LEVELS = [
+        { rows: 3, cols: 3, speed: 4000, cycles: 2 },
+        { rows: 4, cols: 4, speed: 4500, cycles: 2 },
+        { rows: 5, cols: 5, speed: 5500, cycles: 2 },
+      ];
+
+      // 4 cardinal directions
+      const DIRECTIONS = [
+        { key: "up", symbol: "↑", name: "UP" },
+        { key: "right", symbol: "→", name: "RIGHT" },
+        { key: "down", symbol: "↓", name: "DOWN" },
+        { key: "left", symbol: "←", name: "LEFT" },
+      ];
+
+      // change target occasionally
+      const TARGET_CHANGE_INTERVAL = 4;
+
+      /* ====== DOM ====== */
+      const gridEl = document.getElementById("grid");
+      const countdownEl = document.getElementById("countdownOverlay");
+      const winOverlay = document.getElementById("winOverlay");
+      const winText = document.getElementById("winText");
+      const nextBtn = document.getElementById("nextLevelBtn");
+
+      const levelDisplay = document.getElementById("levelDisplay");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const hitsDisplay = document.getElementById("hitsDisplay");
+      const missesDisplay = document.getElementById("missesDisplay");
+      const targetArrowEl = document.getElementById("targetArrow");
+      const targetNameEl = document.getElementById("targetName");
+
+      /* ====== GAME STATE ====== */
+      let currentLevel = 0;
+      let tiles = []; // DOM elements
+      let cycleCount = 0;
+      let cycleTimer = null;
+      let locked = false;
+
+      let targetDir = DIRECTIONS[1]; // default RIGHT
+      let gameLog = []; // events
+      let hits = 0;
+      let misses = 0;
+      let score = 0;
+
+      /* ====== HELPERS ====== */
+      const rand = (max) => Math.floor(Math.random() * max);
+      const pick = (arr) => arr[rand(arr.length)];
+
+      /* ====== BUILD GRID ====== */
+      function buildGrid(level) {
+        gridEl.innerHTML = "";
+        tiles = [];
+        gridEl.style.gridTemplateRows = `repeat(${level.rows}, 1fr)`;
+        gridEl.style.gridTemplateColumns = `repeat(${level.cols}, 1fr)`;
+        const total = level.rows * level.cols;
+        for (let i = 0; i < total; i++) {
+          const t = document.createElement("div");
+          t.className = "tile";
+          t.dataset.index = i;
+          // dataset fields per cycle:
+          // t.dataset.dir = <direction-key>  (string)
+          // t.dataset.tapped = "0" or "1"
+          t.dataset.dir = "";
+          t.dataset.tapped = "0";
+          t.addEventListener("click", () => tileClicked(i));
+          gridEl.appendChild(t);
+          tiles.push(t);
+        }
+      }
+
+      /* ====== START LEVEL ====== */
+      function startLevel(levelIndex) {
+        currentLevel = levelIndex;
+        hits = 0;
+        misses = 0;
+        score = 0;
+        cycleCount = 0;
+        locked = false;
+        gameLog = [];
+        targetDir = pick(DIRECTIONS);
+        updateTargetDisplay();
+        levelDisplay.textContent = currentLevel + 1;
+        updateHUD();
+        buildGrid(LEVELS[currentLevel]);
+        showCountdown(3).then(() => runGame());
+      }
+
+      function showCountdown(sec) {
+        return new Promise((res) => {
+          countdownEl.style.opacity = 1;
+          countdownEl.style.pointerEvents = "auto";
+          let c = sec;
+          countdownEl.textContent = c;
+          const iv = setInterval(() => {
+            c--;
+            if (c > 0) countdownEl.textContent = c;
+            else {
+              clearInterval(iv);
+              countdownEl.style.opacity = 0;
+              countdownEl.style.pointerEvents = "none";
+              res();
+            }
+          }, 1000);
+        });
+      }
+
+      /* ====== HUD ====== */
+      function updateHUD() {
+        hitsDisplay.textContent = hits;
+        missesDisplay.textContent = misses;
+        scoreDisplay.textContent = score;
+      }
+
+      function updateTargetDisplay() {
+        targetArrowEl.textContent = targetDir.symbol;
+        targetNameEl.textContent = targetDir.name;
+      }
+
+      /* ====== GAME LOOP ====== */
+      function runGame() {
+        locked = false;
+        scheduleNextCycle();
+      }
+
+      function scheduleNextCycle() {
+        const cfg = LEVELS[currentLevel];
+        // end condition
+        if (cycleCount >= cfg.cycles) {
+          return endLevel();
+        }
+        // immediate cycle
+        nextCycle();
+        cycleTimer = setTimeout(scheduleNextCycle, cfg.speed);
+      }
+
+      function nextCycle() {
+        const cfg = LEVELS[currentLevel];
+
+        // First: handle missed target tiles from previous cycle
+        // Any tile that had dir == targetDir.key and tapped == "0" is a missed target
+        tiles.forEach((t, i) => {
+          const dir = t.dataset.dir;
+          const tapped = t.dataset.tapped === "1";
+          if (dir && dir === targetDir.key && !tapped) {
+            // missed
+            misses++;
+            score = Math.max(0, score - 2);
+            gameLog.push({
+              time: Date.now(),
+              action: "missed_target",
+              tile: i,
+              dir,
+            });
+          }
+          // clear previous visuals
+          t.classList.remove("tap-flash", "cleared");
+          t.textContent = "";
+          t.dataset.dir = "";
+          t.dataset.tapped = "0";
+        });
+
+        // Possibly change target every TARGET_CHANGE_INTERVAL cycles (makes it dynamic)
+        if (cycleCount > 0 && cycleCount % TARGET_CHANGE_INTERVAL === 0) {
+          let newTarget;
+          do {
+            newTarget = pick(DIRECTIONS);
+          } while (newTarget.key === targetDir.key);
+          targetDir = newTarget;
+          updateTargetDisplay();
+          gameLog.push({
+            time: Date.now(),
+            action: "target_change",
+            newTarget: targetDir.key,
+            cycle: cycleCount,
+          });
+        }
+
+        // Assign directions to tiles for this cycle.
+        // Guarantee at least one matching tile.
+        const total = tiles.length;
+        // Decide number of matching tiles: between 1 and Math.max(1, floor(25% of tiles))
+        const maxMatches = Math.max(1, Math.floor(total * 0.25));
+        const numMatches = Math.max(
+          1,
+          Math.floor(Math.random() * maxMatches) + 1
+        ); // 1..maxMatches
+        // pick unique indices for matches
+        const allIndices = Array.from({ length: total }, (_, i) => i);
+        // shuffle and take first numMatches
+        for (let i = allIndices.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+        }
+        const matchIndices = allIndices.slice(0, numMatches);
+
+        // Fill tiles: matches get targetDir, others random non-target
+        tiles.forEach((t, i) => {
+          if (matchIndices.includes(i)) {
+            t.dataset.dir = targetDir.key;
+            t.textContent = targetDir.symbol;
+          } else {
+            // pick a random non-target direction
+            let other;
+            do {
+              other = pick(DIRECTIONS);
+            } while (other.key === targetDir.key);
+            t.dataset.dir = other.key;
+            t.textContent = other.symbol;
+          }
+        });
+
+        // log show
+        gameLog.push({
+          time: Date.now(),
+          action: "show",
+          cycle: cycleCount,
+          target: targetDir.key,
+          matches: numMatches,
+        });
+
+        cycleCount++;
+        updateHUD();
+      }
+
+      /* ====== TILE CLICK HANDLING ====== */
+      function tileClicked(index) {
+        if (locked) return;
+
+        const t = tiles[index];
+        // if already tapped / cleared this cycle, ignore
+        if (t.dataset.tapped === "1") return;
+
+        const dir = t.dataset.dir || "";
+        if (!dir) {
+          // tapping an empty/cleared tile -> penalize
+          misses++;
+          score = Math.max(0, score - 2);
+          gameLog.push({ time: Date.now(), action: "tap_empty", tile: index });
+          updateHUD();
+          return;
+        }
+
+        if (dir === targetDir.key) {
+          // correct
+          hits++;
+          score += 10;
+          t.dataset.tapped = "1";
+          t.classList.add("tap-flash");
+          // mark as cleared visually after short delay
+          setTimeout(() => {
+            t.classList.remove("tap-flash");
+            t.classList.add("cleared");
+            t.textContent = "";
+          }, 150);
+          gameLog.push({ time: Date.now(), action: "hit", tile: index, dir });
+          updateHUD();
+          return;
+        } else {
+          // wrong tile tapped
+          misses++;
+          score = Math.max(0, score - 2);
+          // brief feedback
+          t.classList.add("tap-flash");
+          setTimeout(() => t.classList.remove("tap-flash"), 180);
+          gameLog.push({
+            time: Date.now(),
+            action: "wrong_tap",
+            tile: index,
+            dir,
+          });
+          updateHUD();
+          return;
+        }
+      }
+
+      /* ====== END LEVEL & SAVE ====== */
+      function endLevel() {
+        locked = true;
+        clearTimeout(cycleTimer);
+
+        // Clean visuals
+        tiles.forEach((t) => {
+          t.classList.remove("tap-flash");
+        });
+
+        const result = {
+          level: currentLevel + 1,
+          hits,
+          misses,
+          score,
+        };
+
+        let saved = JSON.parse(localStorage.getItem("direction_dash")) || [];
+        saved[currentLevel] = result;
+        localStorage.setItem("direction_dash", JSON.stringify(saved));
+
+        winText.textContent = `Level ${
+          currentLevel + 1
+        } Complete! Hits:${hits}, Misses:${misses}, Score:${score}`;
+        winOverlay.style.opacity = 1;
+        winOverlay.style.pointerEvents = "auto";
+        gameLog.push({ time: Date.now(), action: "level_end", result });
+      }
+
+      /* ====== NEXT LEVEL BUTTON ====== */
+      nextBtn.addEventListener("click", () => {
+        winOverlay.style.opacity = 0;
+        winOverlay.style.pointerEvents = "none";
+
+        if (currentLevel < LEVELS.length - 1) {
+          startLevel(currentLevel + 1);
+        } else {
+          // All 3 levels completed → go to home page
+          window.location.href = "home_page.html";
+        }
+      });
+
+      /* ====== START ====== */
+      startLevel(0);
+
+      /* ====== Safety: clear timer on unload ====== */
+      window.addEventListener("beforeunload", () => clearTimeout(cycleTimer));
+    </script>
+  </body>
+</html>

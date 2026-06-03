@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Collection Tests</title>
+  <style>body{font-family:Arial;margin:20px} .ok{color:green} .fail{color:red}</style>
+</head>
+<body>
+  <h1>Collection Tests</h1>
+  <div id="log"></div>
+  <button id="run">Run test</button>
+
+  <script>
+    function log(msg, ok){
+      const d = document.createElement('div'); d.textContent = msg; d.style.marginTop='8px';
+      if (ok===true) d.className='ok'; else if (ok===false) d.className='fail';
+      document.getElementById('log').appendChild(d);
+      console.log(msg);
+    }
+
+    // Minimal copy of hub config for collection logic
+    const TOTAL_CONTENTS = 96;
+    const CONTENTS_PER_LEVEL = 3;
+    const gameMap = [
+      { file: "match_rhyming_words.html", key: "match_rhyming_words", levels: 1 },
+      { file: "color_fuse.html", key: "color_fuse", levels: 3 },
+      { file: "direction_dash.html", key: "direction_dash", levels: 3 },
+      { file: "lightning_tap.html", key: "lightning_tap", levels: 3 },
+      { file: "math_burst.html", key: "math_burst", levels: 3 },
+      { file: "memory_match.html", key: "memory_match", levels: 3 },
+      { file: "multiples_tap.html", key: "multiples_tap", levels: 3 },
+      { file: "number_order_tap.html", key: "number_order_tap", levels: 2 },
+      { file: "sequence_memory.html", key: "sequence_memory", levels: 3 },
+      { file: "shape_pop.html", key: "shape_pop", levels: 3 },
+      { file: "speed_tap.html", key: "speed_tap", levels: 3 }
+    ];
+    const gamesNeedingDuplication = [
+      "color_fuse", "direction_dash", "lightning_tap", "math_burst", "memory_match", "multiples_tap", "shape_pop", "speed_tap"
+    ];
+
+    let state = { collectedRecords: [] };
+
+    function normalizeGameResults(key) {
+      let data = JSON.parse(localStorage.getItem(key)) || [];
+      if (data.length === 0) return;
+      const expectedLevels = key === 'number_order_tap' ? 2 : 3;
+      const hasEmptySlots = data.slice(0, expectedLevels).some((d) => !d);
+      if (data.length < expectedLevels || hasEmptySlots) {
+          const fallback = data.find((d) => d && typeof d === 'object');
+          if (!fallback) return;
+          const filled = [];
+          for (let i = 0; i < expectedLevels; i++) {
+              if (data[i] && typeof data[i] === 'object') filled[i] = data[i];
+              else filled[i] = { ...fallback };
+          }
+          data = filled;
+      }
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function pushNormalizedRecord(gameKey, levelNum, entry) {
+      for (let sub = 0; sub < CONTENTS_PER_LEVEL; sub++) {
+          if (state.collectedRecords.length >= TOTAL_CONTENTS) return;
+          const payload = { game: gameKey, level: levelNum, sub };
+          if (entry && typeof entry === 'object') {
+              if ("hits" in entry || "misses" in entry || "score" in entry || "clicks" in entry) {
+                  payload.hits = Number(entry.hits || 0);
+                  payload.misses = Number(entry.misses || 0);
+                  payload.score = Number(entry.score || 0);
+                  payload.clicks = Number(entry.clicks || payload.hits + payload.misses || 0);
+              } else if ("mistakes" in entry || "duration" in entry) {
+                  payload.mistakes = Number(entry.mistakes || 0);
+                  payload.duration = Number(entry.duration || 0);
+                  payload.score = Number(entry.score || 0);
+                  payload.raw = entry.raw || {};
+              } else {
+                  payload.raw = entry;
+              }
+          }
+          state.collectedRecords.push({ id: `${gameKey}_L${levelNum}_${sub}`, timestamp: new Date().toISOString(), payload });
+      }
+    }
+
+    function collectAllGameResults() {
+      state.collectedRecords = [];
+      for (const g of gameMap) {
+          if (gamesNeedingDuplication.includes(g.key)) normalizeGameResults(g.key);
+          const raw = localStorage.getItem(g.key);
+          if (!raw) continue;
+          try {
+              const parsed = JSON.parse(raw);
+              if (g.key === "memory_match") {
+                  if (Array.isArray(parsed)) parsed.forEach((entry, idx) => pushNormalizedRecord(g.key, idx+1, entry));
+              } else if (g.key === "sequence_memory") {
+                  if (Array.isArray(parsed)) parsed.forEach((log, idx)=> {
+                      const mistakes = log.mistakes || 0;
+                      const score = log.success === 1 ? (100 - mistakes*5) : 0;
+                      pushNormalizedRecord(g.key, idx+1, { mistakes, score, duration: log.duration, raw: log });
+                  });
+              } else {
+                  if (Array.isArray(parsed)) {
+                      for (let i=0;i<parsed.length;i++){
+                          const entry = parsed[i]; if (!entry) continue; pushNormalizedRecord(g.key, entry.level || i+1, entry);
+                      }
+                  } else if (typeof parsed === 'object') pushNormalizedRecord(g.key, parsed.level || 1, parsed);
+              }
+          } catch(e){ console.warn('collect parse fail', g.key, e); }
+          if (state.collectedRecords.length >= TOTAL_CONTENTS) break;
+      }
+    }
+
+    function simulateSaves() {
+      // For each game create 3 levels; some uses sparse arrays to mimic real games
+      gameMap.forEach(g => {
+        let arr = [];
+        if (g.key === 'number_order_tap') {
+          // only 2 levels
+          arr = [ {level:1, hits:5, misses:1, score:50}, {level:2, hits:6, misses:0, score:60} ];
+        } else if (g.key === 'memory_match') {
+          // memory_match appends results
+          arr = [ {level:1, hits:8, misses:0, score:80}, {level:2, hits:9, misses:0, score:90}, {level:3, hits:10, misses:1, score:100} ];
+        } else {
+          // simulate sparse entry for some games to test normalization
+          if (['color_fuse','speed_tap'].includes(g.key)) {
+            const a=[]; a[2] = {level:3, hits:10, misses:0, score:100}; arr = a;
+          } else {
+            arr = [{level:1,hits:5,misses:0,score:50},{level:2,hits:6,misses:0,score:60},{level:3,hits:7,misses:0,score:70}];
+          }
+        }
+        localStorage.setItem(g.key, JSON.stringify(arr));
+      });
+    }
+
+    document.getElementById('run').addEventListener('click', ()=>{
+      localStorage.clear();
+      log('Starting simulation...');
+      simulateSaves();
+      collectAllGameResults();
+      log(`Collected records: ${state.collectedRecords.length}`, state.collectedRecords.length === TOTAL_CONTENTS);
+      if (state.collectedRecords.length !== TOTAL_CONTENTS) {
+        // show breakdown
+        const counts = {};
+        state.collectedRecords.forEach(r => counts[r.payload.game] = (counts[r.payload.game]||0)+1);
+        log('Per-game counts: ' + JSON.stringify(counts));
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup - Join the Fun</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.signup-container {
+    background: white;
+    padding: 50px 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.signup-container h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.signup-container .subtitle {
+    color: #718096;
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+.signup-container form {
+    text-align: left;
+}
+
+.input-group {
+    margin-bottom: 24px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 16px;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.input-group input:focus {
+    border: 2px solid #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.error-text {
+    color: #f56565;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+}
+
+.btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.form-footer {
+    margin-top: 20px;
+    color: #718096;
+    font-size: 14px;
+}
+
+.form-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+</style>
+</head>
+
+<body>
+
+<div class="signup-container">
+<h1>Hi There! 👋</h1>
+<p class="subtitle">Join the fun (Ages 5-12)</p>
+
+<form id="signupForm">
+    <div class="input-group">
+        <label for="name">What is your name?</label>
+        <input type="text" id="name" placeholder="Enter your name" required>
+    </div>
+
+    <div class="input-group">
+        <label for="age">How old are you?</label>
+        <input type="number" id="age" placeholder="Age (5-12)" min="5" max="12" required>
+        <span class="error-text" id="ageError">
+            Oops! Age must be between 5 and 12.
+        </span>
+    </div>
+
+    <button type="submit" class="btn-submit">Let's Go! 🚀</button>
+</form>
+
+<div class="form-footer">
+    Have an account? <a href="home_page.html">Go Back</a>
+</div>
+</div>
+
+
+
+<script>
+(function(){
+  const form = document.getElementById('signupForm');
+  const nameInput = document.getElementById('name');
+  const ageInput = document.getElementById('age');
+  const errorEl = document.getElementById('ageError');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    
+    const name = (nameInput.value || '').trim();
+    const age = parseInt(ageInput.value, 10);
+
+    if (!name) {
+      alert('Please enter your name');
+      return;
+    }
+
+    if (isNaN(age) || age < 5 || age > 12) {
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+
+    // Save to localStorage
+    try {
+      const account = { 
+        name: name, 
+        age: age, 
+        createdAt: new Date().toISOString() 
+      };
+      localStorage.setItem('user_account', JSON.stringify(account));
+      localStorage.setItem('player_profile', JSON.stringify({ 
+        name: name, 
+        age: age, 
+        time: new Date().toISOString() 
+      }));
+    } catch (err) {
+      console.warn('localStorage error:', err);
+    }
+
+    // Success message and redirect
+    console.log('Signup successful! Saved data:');
+    console.log('  user_account:', localStorage.getItem('user_account'));
+    console.log('  player_profile:', localStorage.getItem('player_profile'));
+    console.log('  pendingGameKey:', localStorage.getItem('pendingGameKey'));
+    console.log('All signup-related localStorage keys:', {
+      user_account: localStorage.getItem('user_account'),
+      player_profile: localStorage.getItem('player_profile'),
+      pendingGameKey: localStorage.getItem('pendingGameKey')
+    });
+    alert('Signup Successful 🎉');
+    
+    // Redirect back to home page where pendingGameKey will auto-start the game
+    console.log('About to redirect to home_page.html...');
+    console.log('Final verification before redirect:', {
+      user_account: !!localStorage.getItem('user_account'),
+      player_profile: !!localStorage.getItem('player_profile'),
+      pendingGameKey: localStorage.getItem('pendingGameKey') || 'NOT SET'
+    });
+    window.location.href = 'home_page.html';
+  });
+})();
+</script>
+
+</body>
+</html>

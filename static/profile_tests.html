@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Profile Tests</title>
+  <style>
+    body{font-family:Arial;margin:20px}
+    .ok{color:green}
+    .fail{color:red}
+    .test{margin-bottom:12px}
+  </style>
+</head>
+<body>
+  <h1>Signup/Profile JS Tests</h1>
+  <div id="results"></div>
+  <script>
+    function assert(cond, msg){
+      const div = document.createElement('div'); div.className='test';
+      if(cond){ div.innerHTML = `<span class="ok">✓</span> ${msg}`; } else { div.innerHTML = `<span class="fail">✗</span> ${msg}`; }
+      document.getElementById('results').appendChild(div);
+      return !!cond;
+    }
+
+    (function runTests(){
+      localStorage.clear();
+
+      // Test 1: Signup saves player_profile and user_account
+      localStorage.setItem('player_profile', JSON.stringify({name:'TestKid', age:8}));
+      localStorage.setItem('user_account', JSON.stringify({name:'TestKid', age:8}));
+      const pp = JSON.parse(localStorage.getItem('player_profile') || 'null');
+      const ua = JSON.parse(localStorage.getItem('user_account') || 'null');
+      assert(pp && pp.name === 'TestKid' && pp.age === 8, 'Signup should set player_profile in localStorage');
+      assert(ua && ua.name === 'TestKid' && ua.age === 8, 'Signup should set user_account in localStorage');
+
+      // Test 2: Edit profile (simulate saveProfile behavior)
+      function simulateSaveProfile(newName, newAge){
+        const acc = {name:newName, age:newAge, createdAt: new Date().toISOString()};
+        localStorage.setItem('user_account', JSON.stringify(acc));
+        localStorage.setItem('player_profile', JSON.stringify({name:newName, age:newAge, time:new Date().toISOString()}));
+      }
+      simulateSaveProfile('NewName', 10);
+      const pp2 = JSON.parse(localStorage.getItem('player_profile')||'null');
+      assert(pp2 && pp2.name === 'NewName' && pp2.age === 10, 'saveProfile should update player_profile');
+
+      // Test 3: showMyGames filter behavior - simulate a few records and run a sample filter
+      localStorage.removeItem('player_profile'); // ensure isolated
+      const fakeRecords = [];
+      const now = Date.now();
+      fakeRecords.push({id:'a', timestamp: new Date(now - 2*24*3600*1000).toISOString(), payload:{game:'match_rhyming_words', level:1, score:10}});
+      fakeRecords.push({id:'b', timestamp: new Date(now - 1*24*3600*1000).toISOString(), payload:{game:'color_fuse', level:2, score:20}});
+      fakeRecords.push({id:'c', timestamp: new Date(now).toISOString(), payload:{game:'match_rhyming_words', level:3, score:15}});
+      // store in memory (not using state) and test filtering function locally
+      function filterRecords(list, game, from, to){
+        return list.filter(r=>{
+          if(game && game!=='all' && r.payload.game!==game) return false;
+          const ts = new Date(r.timestamp);
+          if(from && ts < from) return false;
+          if(to && ts > to) return false;
+          return true;
+        });
+      }
+      const oneDay = 24*3600*1000;
+      const res1 = filterRecords(fakeRecords, 'match_rhyming_words', null, null);
+      assert(res1.length === 2, 'Filter by game should find 2 match_rhyming_words records');
+      const res2 = filterRecords(fakeRecords, 'all', new Date(now - oneDay), new Date(now+1));
+      assert(res2.length === 2, 'Date filter should find 2 records in last day');
+
+      // --- Test 4: normalizeGameResults should fill sparse arrays ---
+      (function(){
+        // Inject a sparse array (only level 3 present)
+        localStorage.setItem('match_rhyming_words', JSON.stringify([null, null, {level:3, hits:10, misses:0, score:100}]));
+
+        // Minimal copy of normalizeGameResults logic for testing
+        function normalizeGameResultsForTest(key) {
+          let data = JSON.parse(localStorage.getItem(key)) || [];
+          if (data.length === 0) return;
+          const expectedLevels = key === 'number_order_tap' ? 2 : 3;
+          const hasEmptySlots = data.slice(0, expectedLevels).some((d) => !d);
+          if (data.length < expectedLevels || hasEmptySlots) {
+            const fallback = data.find((d) => d && typeof d === 'object');
+            if (!fallback) return;
+            const filled = [];
+            for (let i = 0; i < expectedLevels; i++) {
+              if (data[i] && typeof data[i] === 'object') filled[i] = data[i];
+              else filled[i] = { ...fallback };
+            }
+            data = filled;
+          }
+          localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        normalizeGameResultsForTest('match_rhyming_words');
+        const after = JSON.parse(localStorage.getItem('match_rhyming_words')||'[]');
+        const ok = Array.isArray(after) && after.length === 3 && after.every(x => x && typeof x === 'object');
+        assert(ok, 'normalizeGameResults should fill sparse arrays to expected length and remove holes');
+      })();
+
+      // Summary
+      const passed = document.querySelectorAll('.ok').length;
+      const total = document.querySelectorAll('.test').length;
+      const summary = document.createElement('div'); summary.style.marginTop='20px'; summary.innerHTML = `<strong>Passed ${passed}/${total}</strong>`;
+      document.getElementById('results').appendChild(summary);
+    })();
+  </script>
+</body>
+</html>

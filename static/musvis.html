@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>👁️ MusVis - Visual Symbol Game 👁️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --color-1: #FF6B9D;
+      --color-2: #FFC75F;
+      --color-3: #6BCEBB;
+      --color-4: #845EC2;
+      --color-5: #00C9A7;
+      --good: #7FE98A;
+      --bad: #FF6B6B;
+      --shadow: 0 12px 35px rgba(0,0,0,0.15);
+      --light-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    }
+    
+    *{box-sizing:border-box}
+    
+    body{
+      margin:0;
+      padding:0;
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(135deg, #FF6B9D 0%, #FFC75F 25%, #6BCEBB 50%, #C78CFF 75%, #6BCEBB 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: #2c2c2c;
+      min-height: 100vh;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .wrap{
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .game{
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(135deg, #FFFFFF 0%, #F0F8FF 100%);
+      border-radius: 35px;
+      box-shadow: var(--shadow);
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      border: 5px solid #FFD700;
+    }
+    
+    /* TOP SECTION */
+    .top{
+      text-align: center;
+      animation: bounceIn 0.8s ease-out;
+    }
+    
+    .title{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--color-1), var(--color-4), var(--color-5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+      line-height: 1.2;
+    }
+    
+    .instr{
+      font-size: 20px;
+      color: #555;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    
+    /* HUD */
+    .hud{
+      display: flex;
+      justify-content: space-around;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    
+    .stat{
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      padding: 18px 28px;
+      border-radius: 20px;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: var(--light-shadow);
+      transform: scale(1);
+      transition: transform 0.2s;
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    
+    .stat:hover{
+      transform: scale(1.05);
+    }
+    
+    .stat span{
+      display: block;
+      font-size: 28px;
+      margin-top: 8px;
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    .progressWrap{
+      width: 100%;
+    }
+    
+    .progressBar{
+      height: 24px;
+      background: #E8E8E8;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 3px solid #FFC75F;
+      box-shadow: var(--light-shadow);
+    }
+    
+    .progressFill{
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-3), var(--color-5));
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    
+    /* CENTER SECTION */
+    .center{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 0;
+    }
+    
+    .roundInfo{
+      font-size: 22px;
+      color: #666;
+      font-weight: 600;
+      background: #FFF9E6;
+      padding: 12px 24px;
+      border-radius: 20px;
+      border: 3px dashed var(--color-2);
+    }
+    
+    .roundInfo strong{
+      color: var(--color-4);
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    /* GAME LAYOUT */
+    .gameContainer{
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .leftPanel{
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .targetLabel{
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-4);
+      background: #F3E5F5;
+      padding: 10px 20px;
+      border-radius: 15px;
+      border: 2px solid var(--color-4);
+    }
+    
+    .targetSymbol{
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+      border-radius: 25px;
+      border: 5px solid var(--color-4);
+      box-shadow: 0 15px 40px rgba(132, 94, 194, 0.25);
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 80px;
+      color: var(--color-4);
+      font-weight: 800;
+      transition: all 0.3s ease;
+    }
+    
+    .targetSymbol:hover{
+      transform: scale(1.1);
+    }
+    
+    .rightPanel{
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .gridContainer{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .gridContainer.grid4{
+      grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .gridContainer.grid5{
+      grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .symbolBox{
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+      border-radius: 15px;
+      border: 3px solid var(--color-3);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 36px;
+      color: var(--color-4);
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--light-shadow);
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .symbolBox::before{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      transition: left 0.3s;
+    }
+    
+    .symbolBox:hover{
+      transform: translateY(-6px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .symbolBox:hover::before{
+      left: 100%;
+    }
+    
+    .symbolBox.grid4{
+      font-size: 32px;
+    }
+    
+    .symbolBox.grid5{
+      font-size: 28px;
+    }
+    
+    .symbolBox.correct{
+      border-color: var(--good);
+      background: linear-gradient(135deg, #E8F8E8, #F0FFF0);
+      color: #22B14C;
+      animation: correctPulse 0.6s ease-out;
+      box-shadow: 0 15px 35px rgba(127, 233, 138, 0.35);
+    }
+    
+    .symbolBox.wrong{
+      border-color: var(--bad);
+      background: linear-gradient(135deg, #FFE8E8, #FFF0F0);
+      color: var(--bad);
+      animation: wrongShake 0.5s ease-out;
+      box-shadow: 0 15px 35px rgba(255, 107, 107, 0.35);
+    }
+    
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* FOOTER */
+    .footer{
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 15px 0;
+      margin-top: 10px;
+    }
+    
+    .timer{
+      font-weight: 700;
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--color-2), var(--color-1));
+      color: white;
+      padding: 12px 20px;
+      border-radius: 15px;
+      box-shadow: var(--light-shadow);
+      font-family: 'Fredoka One', sans-serif;
+      display: none;
+    }
+    
+    .reaction{
+      font-weight: 700;
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--color-4), var(--color-5));
+      color: white;
+      padding: 12px 20px;
+      border-radius: 15px;
+      box-shadow: var(--light-shadow);
+      font-family: 'Fredoka One', sans-serif;
+    }
+    
+    /* END SCREEN */
+    .end{
+      padding: 40px 30px;
+      text-align: center;
+      animation: zoomIn 0.6s ease-out;
+    }
+    
+    @keyframes zoomIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    .big{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--color-1), var(--color-4), var(--color-5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 20px 0;
+    }
+    
+    .summary{
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 30px 0;
+    }
+    
+    .cardSmall{
+      background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+      border-radius: 20px;
+      padding: 25px 30px;
+      box-shadow: var(--light-shadow);
+      border: 3px solid var(--color-3);
+      flex: 1;
+      min-width: 140px;
+      max-width: 180px;
+    }
+    
+    .cardSmall strong{
+      display: block;
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 32px;
+      color: var(--color-4);
+      margin-top: 10px;
+    }
+    
+    .processing-result{
+      font-family: 'Fredoka One', sans-serif;
+      font-size: 28px;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 15px;
+      border: 3px solid var(--color-5);
+    }
+    
+    .processing-strong{
+      color: var(--good);
+      background: #E8F8E8;
+    }
+    
+    .processing-moderate{
+      color: var(--color-2);
+      background: #FFF9E6;
+    }
+    
+    .processing-weak{
+      color: var(--bad);
+      background: #FFE8E8;
+    }
+    
+    .restart{
+      padding: 16px 36px;
+      border-radius: 20px;
+      border: none;
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      color: white;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Fredoka One', sans-serif;
+      box-shadow: var(--light-shadow);
+      margin-top: 25px;
+      transition: all 0.2s;
+    }
+    
+    .restart:hover{
+      transform: scale(1.08);
+      box-shadow: 0 15px 35px rgba(255, 107, 157, 0.35);
+    }
+    
+    .restart:active{
+      transform: scale(0.95);
+    }
+    
+    /* RESPONSIVE */
+    @media(max-width: 900px){
+      .gameContainer{
+        gap: 20px;
+      }
+      
+      .targetSymbol{
+        width: 140px;
+        height: 140px;
+        font-size: 70px;
+      }
+      
+      .symbolBox{
+        font-size: 28px;
+      }
+      
+      .symbolBox.grid4{
+        font-size: 24px;
+      }
+      
+      .symbolBox.grid5{
+        font-size: 20px;
+      }
+    }
+    
+    @media(max-width: 768px){
+      .game{
+        padding: 30px 20px;
+        gap: 25px;
+        border-radius: 25px;
+      }
+      
+      .title{
+        font-size: 38px;
+      }
+      
+      .gameContainer{
+        gap: 15px;
+      }
+      
+      .leftPanel{
+        min-width: 180px;
+      }
+      
+      .targetSymbol{
+        width: 120px;
+        height: 120px;
+        font-size: 60px;
+      }
+      
+      .symbolBox{
+        font-size: 24px;
+      }
+      
+      .symbolBox.grid4{
+        font-size: 20px;
+      }
+      
+      .symbolBox.grid5{
+        font-size: 16px;
+      }
+      
+      .hud{
+        gap: 10px;
+      }
+      
+      .stat{
+        padding: 14px 20px;
+        font-size: 16px;
+        min-width: 100px;
+      }
+      
+      .stat span{
+        font-size: 22px;
+      }
+    }
+    
+    @media(max-width: 480px){
+      .wrap{
+        padding: 15px;
+      }
+      
+      .game{
+        padding: 20px 15px;
+        gap: 20px;
+        border-radius: 20px;
+      }
+      
+      .title{
+        font-size: 28px;
+      }
+      
+      .instr{
+        font-size: 16px;
+      }
+      
+      .gameContainer{
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .leftPanel{
+        min-width: 100%;
+      }
+      
+      .rightPanel{
+        min-width: 100%;
+      }
+      
+      .targetSymbol{
+        width: 100px;
+        height: 100px;
+        font-size: 50px;
+      }
+      
+      .symbolBox{
+        font-size: 20px;
+      }
+      
+      .symbolBox.grid4{
+        font-size: 18px;
+      }
+      
+      .symbolBox.grid5{
+        font-size: 14px;
+      }
+      
+      .roundInfo{
+        font-size: 16px;
+      }
+      
+      .big{
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="game" role="application">
+      <div class="top">
+        <div class="title">👁️ MusVis - Visual Symbol Game 👁️</div>
+        <div class="instr">Look at the target symbol and find the same symbol in the grid!</div>
+        <div class="hud">
+          <div class="stat">⭐ Score<br/><span id="score">0</span></div>
+          <div class="stat">❌ Errors<br/><span id="errors">0</span></div>
+          <div class="stat">🎮 Round<br/><span id="round">0</span></div>
+        </div>
+      </div>
+
+      <div class="progressWrap">
+        <div class="progressBar"><div id="prog" class="progressFill"></div></div>
+      </div>
+
+      <div class="center">
+        <div class="roundInfo">📚 Level: <strong id="levelName">1 - Basic Vision</strong>&nbsp;&nbsp;|&nbsp;&nbsp;<span id="roundInfo">Round 0 / 0</span></div>
+        
+        <div class="gameContainer">
+          <div class="leftPanel">
+            <div class="targetLabel">TARGET:</div>
+            <div class="targetSymbol" id="targetSymbol"><</div>
+          </div>
+          
+          <div class="rightPanel">
+            <div class="gridContainer" id="grid"></div>
+            
+            <div class="footer">
+              <div class="timer" style="display: none;">⏱️ Time: <span id="timer">8.0</span>s</div>
+              <div class="reaction">⚡ Reaction: <span id="lastRT">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="endScreen" style="display:none" class="end">
+        <div class="big">🎉 Fantastic! 🎉</div>
+        <div class="summary">
+          <div class="cardSmall">⭐ Total Score<br/><strong id="resScore">0</strong></div>
+          <div class="cardSmall">❌ Total Errors<br/><strong id="resErrors">0</strong></div>
+          <div class="cardSmall">⚡ Avg Time<br/><strong id="resAvgRT">0</strong> ms</div>
+        </div>
+        <div class="processing-result" id="resLevel">—</div>
+        <button id="restart" class="restart">👁️ Play Again!</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Game data per level
+const LEVELS = [
+  { 
+    id: 1, 
+    name: 'Basic Vision', 
+    symbols: ['<', '>', '^'], 
+    gridSize: 3,
+    rounds: 5, 
+    timerEnabled: false,
+    timerDuration: 10
+  },
+  { 
+    id: 2, 
+    name: 'Vision Master', 
+    symbols: ['<', '>', '^', 'v', '*'], 
+    gridSize: 4,
+    rounds: 8, 
+    timerEnabled: true,
+    timerDuration: 8
+  },
+  { 
+    id: 3, 
+    name: 'Expert Vision', 
+    symbols: ['<', '>', '^', 'v', '*', '+', '='], 
+    gridSize: 5,
+    rounds: 10, 
+    timerEnabled: true,
+    timerDuration: 5
+  }
+];
+
+let levelIndex = 0;
+let roundNum = 0;
+let score = 0, errors = 0;
+let startTimestamp = null;
+let reactionTimes = [];
+let timerInterval = null;
+let timeLeft = 5.0;
+let currentCorrect = null;
+let correctPosition = null;
+
+const scoreEl = document.getElementById('score');
+const errorsEl = document.getElementById('errors');
+const roundEl = document.getElementById('round');
+const levelNameEl = document.getElementById('levelName');
+const roundInfoEl = document.getElementById('roundInfo');
+const progEl = document.getElementById('prog');
+const gridEl = document.getElementById('grid');
+const targetSymbolEl = document.getElementById('targetSymbol');
+const timerEl = document.getElementById('timer');
+const lastRtEl = document.getElementById('lastRT');
+const endScreen = document.getElementById('endScreen');
+const resScore = document.getElementById('resScore');
+const resErrors = document.getElementById('resErrors');
+const resAvgRT = document.getElementById('resAvgRT');
+const resLevel = document.getElementById('resLevel');
+const restartBtn = document.getElementById('restart');
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a }
+
+function formatMs(ms){ return Math.round(ms) }
+
+function startLevel(idx){
+  levelIndex = idx;
+  roundNum = 0;
+  score = 0;
+  errors = 0;
+  reactionTimes = [];
+  scoreEl.textContent = score;
+  errorsEl.textContent = errors;
+  roundEl.textContent = '0';
+  levelNameEl.textContent = `${LEVELS[levelIndex].id} - ${LEVELS[levelIndex].name}`;
+  endScreen.style.display = 'none';
+  nextRound();
+}
+
+function updateProgress(){
+  const totalRounds = LEVELS[levelIndex].rounds;
+  const pct = Math.round((roundNum / totalRounds) * 100);
+  progEl.style.width = pct + '%';
+  roundInfoEl.textContent = `Round ${Math.min(roundNum, totalRounds)} / ${totalRounds}`;
+}
+
+function generateGrid(targetSymbol){
+  const level = LEVELS[levelIndex];
+  const gridSize = level.gridSize;
+  const totalCells = gridSize * gridSize;
+  const symbols = level.symbols;
+  
+  // Generate grid array
+  const grid = [];
+  const correctPos = Math.floor(Math.random() * totalCells);
+  correctPosition = correctPos;
+  
+  for(let i = 0; i < totalCells; i++){
+    if(i === correctPos){
+      grid.push(targetSymbol);
+    } else {
+      // Get random symbol different from target
+      let randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+      while(randomSymbol === targetSymbol){
+        randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+      }
+      grid.push(randomSymbol);
+    }
+  }
+  
+  return grid;
+}
+
+function renderGrid(gridArray){
+  const level = LEVELS[levelIndex];
+  const gridSize = level.gridSize;
+  
+  gridEl.innerHTML = '';
+  gridEl.className = 'gridContainer';
+  
+  if(gridSize === 4){
+    gridEl.classList.add('grid4');
+  } else if(gridSize === 5){
+    gridEl.classList.add('grid5');
+  }
+  
+  gridArray.forEach((symbol, index) => {
+    const box = document.createElement('button');
+    box.className = `symbolBox`;
+    
+    if(gridSize === 4){
+      box.classList.add('grid4');
+    } else if(gridSize === 5){
+      box.classList.add('grid5');
+    }
+    
+    box.textContent = symbol;
+    box.onclick = () => onSymbolClick(box, index);
+    box.setAttribute('data-index', index);
+    gridEl.appendChild(box);
+  });
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  const level = LEVELS[levelIndex];
+  
+  const timerDiv = timerEl.parentElement;
+  
+  if(!level.timerEnabled){
+    if(timerDiv) timerDiv.style.display = 'none';
+    startTimestamp = performance.now();
+    return;
+  }
+  
+  if(timerDiv) timerDiv.style.display = 'block';
+  
+  timeLeft = level.timerDuration || 5;
+  if(timerEl) timerEl.textContent = timeLeft.toFixed(1);
+  startTimestamp = performance.now();
+  
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      if(timerEl) timerEl.textContent = '0.0';
+      onTimeout();
+    } else {
+      if(timerEl) timerEl.textContent = timeLeft.toFixed(1);
+    }
+  }, 100);
+}
+
+function onTimeout(){
+  errors++;
+  errorsEl.textContent = errors;
+  lastRtEl.textContent = '—';
+  setTimeout(() => { nextRound() }, 700);
+}
+
+function onSymbolClick(button, index){
+  if(currentCorrect === null) return;
+  
+  const clickTime = performance.now();
+  const rt = startTimestamp ? (clickTime - startTimestamp) : 0;
+  lastRtEl.textContent = formatMs(rt);
+  reactionTimes.push(rt);
+
+  if(index === correctPosition){
+    score += 1;
+    scoreEl.textContent = score;
+    button.classList.add('correct');
+  } else {
+    errors += 1;
+    errorsEl.textContent = errors;
+    button.classList.add('wrong');
+    // Highlight correct
+    const boxes = gridEl.querySelectorAll('[data-index]');
+    boxes[correctPosition].classList.add('correct');
+  }
+  
+  clearInterval(timerInterval);
+  currentCorrect = null;
+  setTimeout(() => nextRound(), 900);
+}
+
+function nextRound(){
+  const level = LEVELS[levelIndex];
+  const total = level.rounds;
+  roundNum++;
+  
+  if(roundNum > total){
+    showResults();
+    return;
+  }
+  
+  roundEl.textContent = roundNum;
+  updateProgress();
+
+  const symbols = level.symbols;
+  const targetSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+  currentCorrect = targetSymbol;
+  
+  // Display target
+  targetSymbolEl.textContent = targetSymbol;
+  
+  // Generate and render grid
+  const gridArray = generateGrid(targetSymbol);
+  renderGrid(gridArray);
+
+  startTimer();
+}
+
+function showResults(){
+  const totalRounds = LEVELS[levelIndex].rounds;
+  endScreen.style.display = 'block';
+  const totalScore = score;
+  const totalErrors = errors;
+  const avgRT = reactionTimes.length ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) : 0;
+  resScore.textContent = totalScore;
+  resErrors.textContent = totalErrors;
+  resAvgRT.textContent = avgRT;
+  
+  const accuracy = totalRounds ? (totalScore / totalRounds) : 0;
+  let resClass = 'processing-weak';
+  let resText = '⚠️ Weak Visual Processing - Practice More! 💪';
+  
+  if(accuracy >= 0.8){
+    resClass = 'processing-strong';
+    resText = '✨ Strong Visual Processing Skills! ✨';
+  } else if(accuracy >= 0.6){
+    resClass = 'processing-moderate';
+    resText = '👍 Moderate Visual Processing - Keep Improving! 👍';
+  }
+  
+  resLevel.textContent = resText;
+  resLevel.className = 'processing-result ' + resClass;
+}
+
+try {
+  restartBtn.addEventListener('click', () => {
+    endScreen.style.display = 'none';
+    startLevel(0);
+  });
+
+  levelNameEl.addEventListener('dblclick', () => {
+    levelIndex = (levelIndex + 1) % LEVELS.length;
+    startLevel(levelIndex);
+  });
+
+  // Initialize game
+  startLevel(0);
+} catch(e) {
+  console.error('Game initialization error:', e);
+}
+
+</script>
+</body>
+</html>
